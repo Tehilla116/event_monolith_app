@@ -1,0 +1,36 @@
+services:
+  # Web Service - Elysia.js API
+  - type: web
+    name: event-management-api
+    runtime: bun
+    plan: free
+    buildCommand: bun install && npx prisma generate
+    startCommand: bun src/index.ts
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: event-management-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: PORT
+        value: 8080
+      - key: EMAIL_HOST
+        value: smtp.ethereal.email
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_FROM
+        value: noreply@eventapp.com
+
+# Database - PostgreSQL
+databases:
+  - name: event-management-db
+    plan: free
+    databaseName: event_management
+    user: event_admin
