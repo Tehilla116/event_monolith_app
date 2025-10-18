@@ -96,4 +96,3 @@ The basic setup is complete! You can now:
 3. Generate Prisma client and push the schema
 4. Start implementing controllers, routes, and services
 
-Ask me to generate any specific part of the application!
