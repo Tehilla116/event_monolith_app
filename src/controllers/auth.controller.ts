@@ -7,9 +7,10 @@ import { signToken } from "../utils/jwt.utils";
  * Register a new user
  * @param email - User's email address
  * @param password - User's password (will be hashed)
+ * @param role - User's role (ATTENDEE or ORGANIZER, defaults to ATTENDEE)
  * @returns Created user object and success message
  */
-export async function registerUser(email: string, password: string) {
+export async function registerUser(email: string, password: string, role: "ATTENDEE" | "ORGANIZER" = "ATTENDEE") {
   try {
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -28,12 +29,12 @@ export async function registerUser(email: string, password: string) {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create new user in database with ATTENDEE role
+    // Create new user in database with selected role
     const newUser = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
-        role: "ATTENDEE", // Default role
+        role: role, // Use provided role or default to ATTENDEE
       },
       select: {
         id: true,

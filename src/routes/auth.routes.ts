@@ -6,7 +6,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
   .post(
     "/signup",
     async ({ body, set }) => {
-      const result = await registerUser(body.email, body.password);
+      const result = await registerUser(body.email, body.password, body.role);
       set.status = result.status;
       
       if (!result.success) {
@@ -30,11 +30,14 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
           minLength: 6,
           error: "Password must be at least 6 characters long",
         }),
+        role: t.Optional(t.Union([t.Literal("ATTENDEE"), t.Literal("ORGANIZER")], {
+          default: "ATTENDEE",
+        })),
       }),
       detail: {
         tags: ["Auth"],
         summary: "Register a new user",
-        description: "Create a new user account with email and password",
+        description: "Create a new user account with email, password, and optional role (ATTENDEE or ORGANIZER)",
       },
     }
   )

@@ -63,6 +63,7 @@ export async function createEvent(
   }
 ) {
   try {
+    console.log("Attempting to create event with data:", { userId, eventData });
     const newEvent = await prisma.event.create({
       data: {
         title: eventData.title,
@@ -70,7 +71,7 @@ export async function createEvent(
         date: eventData.date,
         location: eventData.location,
         organizerId: userId, // Use organizerId from ctx.user.id
-        approved: false, // Events need approval by default
+        approved: true, // Auto-approve for now (change to false for production)
       },
       include: {
         organizer: {
@@ -83,7 +84,9 @@ export async function createEvent(
       },
     });
 
-    // Broadcast event creation to WebSocket clients
+    console.log("Event created successfully:", newEvent);
+
+    // Broadcast the new event to connected clients
     broadcastEventUpdate({
       type: "EVENT_CREATED",
       data: {
@@ -100,10 +103,10 @@ export async function createEvent(
       status: 201,
     };
   } catch (error) {
-    console.error("Error creating event:", error);
+    console.error("Error creating event in controller:", error);
     return {
       success: false,
-      error: "Failed to create event",
+      error: "Failed to create event due to a server error.",
       status: 500,
     };
   }
