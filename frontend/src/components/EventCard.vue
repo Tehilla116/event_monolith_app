@@ -55,6 +55,29 @@ const rsvpCounts = computed(() => {
   }
 })
 
+const remainingSpots = computed(() => {
+  if (!props.event.maxAttendees) return null // Unlimited capacity
+  return props.event.maxAttendees - rsvpCounts.value.going
+})
+
+const isEventFull = computed(() => {
+  if (!props.event.maxAttendees) return false // Unlimited capacity
+  return remainingSpots.value !== null && remainingSpots.value <= 0
+})
+
+const capacityPercentage = computed(() => {
+  if (!props.event.maxAttendees) return 0
+  return (rsvpCounts.value.going / props.event.maxAttendees) * 100
+})
+
+const capacityClass = computed(() => {
+  const pct = capacityPercentage.value
+  if (pct >= 100) return 'text-red-600 dark:text-red-400'
+  if (pct >= 80) return 'text-orange-600 dark:text-orange-400'
+  if (pct >= 50) return 'text-yellow-600 dark:text-yellow-400'
+  return 'text-green-600 dark:text-green-400'
+})
+
 const isEventOwner = computed(() => {
   console.log('Checking event ownership:', {
     eventOrganizerId: props.event.organizerId,
@@ -175,6 +198,32 @@ const handleCardClick = () => {
         </div>
       </div>
 
+      <!-- Capacity Information -->
+      <div v-if="event.maxAttendees" class="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm text-gray-600 dark:text-gray-400">Event Capacity</span>
+          <span class="text-sm font-semibold" :class="capacityClass">
+            <span v-if="isEventFull" class="text-red-600 dark:text-red-400">FULL</span>
+            <span v-else>{{ remainingSpots }} {{ remainingSpots === 1 ? 'spot' : 'spots' }} left</span>
+          </span>
+        </div>
+        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+          <div 
+            class="h-full rounded-full transition-all duration-300"
+            :class="{
+              'bg-green-500': capacityPercentage < 50,
+              'bg-yellow-500': capacityPercentage >= 50 && capacityPercentage < 80,
+              'bg-orange-500': capacityPercentage >= 80 && capacityPercentage < 100,
+              'bg-red-500': capacityPercentage >= 100
+            }"
+            :style="{ width: Math.min(capacityPercentage, 100) + '%' }"
+          ></div>
+        </div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          {{ rsvpCounts.going }} / {{ event.maxAttendees }} attendees
+        </div>
+      </div>
+
       <!-- Current User's RSVP Status -->
       <div v-if="userRsvp" class="mb-4">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium"
@@ -198,12 +247,13 @@ const handleCardClick = () => {
       <div v-if="userRole === 'ATTENDEE' && event.approved && !isEventPast" class="flex gap-2">
         <button
           @click="handleRsvp('GOING')"
-          :disabled="loading"
-          class="flex-1 btn btn-success text-sm py-2 disabled:opacity-50"
+          :disabled="loading || (isEventFull && userRsvp?.status !== 'GOING')"
+          class="flex-1 btn btn-success text-sm py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           :class="{ 'ring-2 ring-green-500': userRsvp?.status === 'GOING' }"
+          :title="isEventFull && userRsvp?.status !== 'GOING' ? 'Event is full' : ''"
         >
           <CheckCircle class="w-4 h-4 mr-1" />
-          Going
+          {{ isEventFull && userRsvp?.status !== 'GOING' ? 'Full' : 'Going' }}
         </button>
         <button
           @click="handleRsvp('MAYBE')"

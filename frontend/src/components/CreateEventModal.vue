@@ -34,6 +34,7 @@ const description = ref('')
 const date = ref('')
 const time = ref('')
 const location = ref('')
+const maxAttendees = ref<number | null>(null)
 const error = ref('')
 const loading = ref(false)
 
@@ -50,6 +51,7 @@ watch(() => props.eventToEdit, (event) => {
     title.value = event.title
     description.value = event.description
     location.value = event.location
+    maxAttendees.value = event.maxAttendees ?? null
     
     // Split date and time
     try {
@@ -91,6 +93,12 @@ const handleSubmit = async () => {
     return
   }
 
+  // Validate max attendees if provided
+  if (maxAttendees.value !== null && maxAttendees.value < 1) {
+    error.value = 'Maximum attendees must be at least 1'
+    return
+  }
+
   loading.value = true
 
   try {
@@ -99,6 +107,7 @@ const handleSubmit = async () => {
       description: description.value,
       date: dateTime,
       location: location.value,
+      maxAttendees: maxAttendees.value,
     }
 
     if (isEditMode.value && props.eventToEdit) {
@@ -130,6 +139,7 @@ const resetForm = () => {
   date.value = ''
   time.value = ''
   location.value = ''
+  maxAttendees.value = null
   error.value = ''
 }
 
@@ -272,6 +282,24 @@ const minDate = computed(() => {
               placeholder="Enter event location"
             />
           </div>
+        </div>
+
+        <!-- Max Attendees -->
+        <div>
+          <label for="maxAttendees" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Maximum Attendees (Optional)
+          </label>
+          <input
+            id="maxAttendees"
+            v-model.number="maxAttendees"
+            type="number"
+            min="1"
+            class="input"
+            placeholder="Leave empty for unlimited capacity"
+          />
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Set a limit on how many people can RSVP as "Going"
+          </p>
         </div>
 
         <!-- Error Message -->

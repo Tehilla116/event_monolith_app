@@ -47,6 +47,7 @@ export interface Event {
   location: string
   organizerId: string
   approved: boolean
+  maxAttendees?: number | null  // Maximum attendees (null = unlimited)
   createdAt?: string
   updatedAt?: string
   organizer?: User

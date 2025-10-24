@@ -86,6 +86,7 @@ export async function createEvent(
     description: string;
     date: Date;
     location: string;
+    maxAttendees?: number | null;
   }
 ) {
   try {
@@ -96,6 +97,7 @@ export async function createEvent(
         description: eventData.description,
         date: eventData.date,
         location: eventData.location,
+        maxAttendees: eventData.maxAttendees,
         organizerId: userId, // Use organizerId from ctx.user.id
         approved: false, // Requires admin approval
       },
@@ -155,6 +157,7 @@ export async function updateEvent(
     description?: string;
     date?: Date;
     location?: string;
+    maxAttendees?: number | null;
   }
 ) {
   try {
@@ -193,6 +196,9 @@ export async function updateEvent(
     }
     if (eventData.location && eventData.location !== event.location) {
       changes.push(`Location changed to: ${eventData.location}`);
+    }
+    if (eventData.maxAttendees !== undefined && eventData.maxAttendees !== event.maxAttendees) {
+      changes.push(`Maximum attendees changed to: ${eventData.maxAttendees ?? 'unlimited'}`);
     }
 
     // Update the event

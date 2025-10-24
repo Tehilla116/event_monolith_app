@@ -173,15 +173,38 @@ const toggleAttendees = () => {
                   <div class="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
                     <UserCheck class="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
-                  <div>
+                  <div class="w-full">
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Attendees</p>
-                    <div class="flex gap-3 text-sm">
+                    <div class="flex gap-3 text-sm mb-2">
                       <span class="text-green-600 dark:text-green-400">
                         {{ rsvpCounts(event).going }} Going
                       </span>
                       <span class="text-yellow-600 dark:text-yellow-400">
                         {{ rsvpCounts(event).maybe }} Maybe
                       </span>
+                    </div>
+                    <!-- Capacity Bar -->
+                    <div v-if="event.maxAttendees" class="mt-2">
+                      <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="text-gray-600 dark:text-gray-400">
+                          {{ event.maxAttendees - rsvpCounts(event).going }} spots remaining
+                        </span>
+                        <span class="text-gray-600 dark:text-gray-400">
+                          {{ rsvpCounts(event).going }} / {{ event.maxAttendees }}
+                        </span>
+                      </div>
+                      <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                        <div 
+                          class="h-full rounded-full transition-all"
+                          :class="{
+                            'bg-green-500': (rsvpCounts(event).going / event.maxAttendees) < 0.5,
+                            'bg-yellow-500': (rsvpCounts(event).going / event.maxAttendees) >= 0.5 && (rsvpCounts(event).going / event.maxAttendees) < 0.8,
+                            'bg-orange-500': (rsvpCounts(event).going / event.maxAttendees) >= 0.8 && (rsvpCounts(event).going / event.maxAttendees) < 1,
+                            'bg-red-500': (rsvpCounts(event).going / event.maxAttendees) >= 1
+                          }"
+                          :style="{ width: Math.min((rsvpCounts(event).going / event.maxAttendees) * 100, 100) + '%' }"
+                        ></div>
+                      </div>
                     </div>
                   </div>
                 </div>

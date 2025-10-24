@@ -31,17 +31,18 @@ model User {
 }
 
 model Event {
-  id          String    @id @default(uuid())
-  title       String
-  description String
-  date        DateTime
-  location    String
-  organizerId String
-  approved    Boolean   @default(false)
-  createdAt   DateTime  @default(now())
+  id           String    @id @default(uuid())
+  title        String
+  description  String
+  date         DateTime
+  location     String
+  organizerId  String
+  approved     Boolean   @default(false)
+  maxAttendees Int?      // Maximum number of attendees (null = unlimited)
+  createdAt    DateTime  @default(now())
 
-  organizer   User      @relation("EventOrganizer", fields: [organizerId], references: [id])
-  rsvps       RSVP[]
+  organizer    User      @relation("EventOrganizer", fields: [organizerId], references: [id])
+  rsvps        RSVP[]
 }
 
 model RSVP {
