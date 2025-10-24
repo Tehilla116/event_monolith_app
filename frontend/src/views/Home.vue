@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Plus } from 'lucide-vue-next'
 import { useAuthStore } from '../stores/auth'
 import { useEventsStore } from '../stores/events'
 import EventCard from '../components/EventCard.vue'
 import CreateEventModal from '../components/CreateEventModal.vue'
+import AdminActionsModal from '../components/AdminActionsModal.vue'
+import ConfirmModal from '../components/ConfirmModal.vue'
+import Toast from '../components/Toast.vue'
+import type { Event } from '../types'
 
 /**
  * Home/Dashboard View
@@ -15,6 +19,25 @@ const eventsStore = useEventsStore()
 
 // Modal state
 const showCreateModal = ref(false)
+const showAdminModal = ref(false)
+const showConfirmModal = ref(false)
+const eventToEdit = ref<Event | null>(null)
+const selectedAdminEvent = ref<Event | null>(null)
+const eventToDelete = ref<string | null>(null)
+
+// Toast state
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error' | 'warning' | 'info'>('success')
+const showToast = ref(false)
+
+/**
+ * Show toast notification
+ */
+const showToastNotification = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
+}
 
 /**
  * Initialize data on mount
@@ -38,14 +61,113 @@ onUnmounted(() => {
  * Toggle create event modal
  */
 const toggleCreateModal = () => {
+  eventToEdit.value = null
   showCreateModal.value = !showCreateModal.value
 }
 
 /**
- * Handle successful event creation
+ * Handle event edit
+ */
+const handleEventEdit = (event: any) => {
+  eventToEdit.value = event
+  showCreateModal.value = true
+}
+
+/**
+ * Handle successful event creation/update
  */
 const handleEventCreated = () => {
   showCreateModal.value = false
+  eventToEdit.value = null
+  showToastNotification('Event created successfully! 🎉', 'success')
+}
+
+/**
+ * Handle successful event update
+ */
+const handleEventUpdated = () => {
+  showCreateModal.value = false
+  eventToEdit.value = null
+  showToastNotification('Event updated successfully! ✅', 'success')
+}
+
+/**
+ * Handle admin card click
+ */
+const handleAdminCardClick = (event: Event) => {
+  selectedAdminEvent.value = event
+  showAdminModal.value = true
+}
+
+/**
+ * Handle event delete from card
+ */
+const handleEventDelete = (event: Event) => {
+  selectedAdminEvent.value = event
+  eventToDelete.value = event.id
+  showConfirmModal.value = true
+}
+
+/**
+ * Handle admin modal close
+ */
+const handleAdminModalClose = () => {
+  showAdminModal.value = false
+  selectedAdminEvent.value = null
+}
+
+/**
+ * Handle admin delete
+ */
+const handleAdminDelete = async (eventId: string) => {
+  eventToDelete.value = eventId
+  showConfirmModal.value = true
+}
+
+/**
+ * Confirm delete action
+ */
+const confirmDelete = async () => {
+  if (!eventToDelete.value) return
+  
+  try {
+    await eventsStore.deleteEvent(eventToDelete.value)
+    showAdminModal.value = false
+    selectedAdminEvent.value = null
+    showConfirmModal.value = false
+    eventToDelete.value = null
+    showToastNotification('Event deleted successfully', 'success')
+  } catch (error) {
+    console.error('Error deleting event:', error)
+    showConfirmModal.value = false
+    showToastNotification('Failed to delete event', 'error')
+  }
+}
+
+/**
+ * Cancel delete action
+ */
+const cancelDelete = () => {
+  showConfirmModal.value = false
+  eventToDelete.value = null
+}
+
+/**
+ * Computed property for delete confirmation message
+ */
+const deleteConfirmMessage = computed(() => {
+  const eventTitle = selectedAdminEvent.value?.title || 'this event'
+  return `Are you sure you want to delete "${eventTitle}"? This will send email notifications to all attendees who have RSVPed.`
+})
+
+/**
+ * Handle admin edit
+ */
+const handleAdminEdit = (event: Event) => {
+  showAdminModal.value = false
+  selectedAdminEvent.value = null
+  eventToEdit.value = event
+  showCreateModal.value = true
 }
 </script>
 
@@ -113,14 +235,48 @@ const handleEventCreated = () => {
         v-for="event in eventsStore.events"
         :key="event.id"
         :event="event"
+        @edit="handleEventEdit"
+        @admin-click="handleAdminCardClick"
+        @delete="handleEventDelete"
       />
     </div>
 
-    <!-- Create Event Modal -->
+    <!-- Create/Edit Event Modal -->
     <CreateEventModal
       v-if="showCreateModal"
+      :event-to-edit="eventToEdit"
       @close="toggleCreateModal"
       @created="handleEventCreated"
+      @updated="handleEventUpdated"
+    />
+
+    <!-- Admin Actions Modal -->
+    <AdminActionsModal
+      :show="showAdminModal"
+      :event="selectedAdminEvent"
+      @close="handleAdminModalClose"
+      @delete="handleAdminDelete"
+      @edit="handleAdminEdit"
+    />
+
+    <!-- Confirm Delete Modal -->
+    <ConfirmModal
+      :show="showConfirmModal"
+      title="Delete Event?"
+      :message="deleteConfirmMessage"
+      type="danger"
+      confirm-text="Delete Event"
+      cancel-text="Cancel"
+      @confirm="confirmDelete"
+      @cancel="cancelDelete"
+    />
+
+    <!-- Toast Notification -->
+    <Toast
+      :show="showToast"
+      :message="toastMessage"
+      :type="toastType"
+      @close="showToast = false"
     />
   </div>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Calendar, MapPin, User, Check, Pencil, Trash2, CheckCircle, XCircle, HelpCircle } from 'lucide-vue-next'
+import { Calendar, MapPin, User, Pencil, Trash2, CheckCircle, XCircle, HelpCircle, Settings } from 'lucide-vue-next'
 import { format } from 'date-fns'
 import { useAuthStore } from '../stores/auth'
 import { useEventsStore } from '../stores/events'
@@ -55,6 +55,16 @@ const rsvpCounts = computed(() => {
   }
 })
 
+const isEventOwner = computed(() => {
+  console.log('Checking event ownership:', {
+    eventOrganizerId: props.event.organizerId,
+    userId: authStore.user?.id,
+    userRole: userRole.value,
+    isOwner: props.event.organizerId === authStore.user?.id
+  })
+  return props.event.organizerId === authStore.user?.id
+})
+
 /**
  * Handle RSVP action
  */
@@ -72,44 +82,38 @@ const handleRsvp = async (status: 'GOING' | 'MAYBE' | 'NOT_GOING') => {
 /**
  * Handle event deletion
  */
-const handleDelete = async () => {
-  if (!confirm('Are you sure you want to delete this event?')) return
-  
-  loading.value = true
-  try {
-    await eventsStore.deleteEvent(props.event.id)
-  } catch (error) {
-    console.error('Error deleting event:', error)
-  } finally {
-    loading.value = false
-  }
+const handleDelete = () => {
+  emit('delete', props.event)
 }
 
-/**
- * Handle event approval (ADMIN only)
- */
-const handleApprove = async () => {
-  loading.value = true
-  try {
-    await eventsStore.approveEvent(props.event.id)
-  } catch (error) {
-    console.error('Error approving event:', error)
-  } finally {
-    loading.value = false
-  }
-}
+// Emits
+const emit = defineEmits<{
+  edit: [event: Event]
+  adminClick: [event: Event]
+  delete: [event: Event]
+}>()
 
 /**
- * Handle edit (placeholder - would open edit modal)
+ * Handle edit - emit event to parent
  */
 const handleEdit = () => {
-  // TODO: Implement edit modal
-  console.log('Edit event:', props.event.id)
+  emit('edit', props.event)
+}
+
+/**
+ * Handle card click for admin
+ */
+const handleCardClick = () => {
+  if (userRole.value === 'ADMIN') {
+    emit('adminClick', props.event)
+  }
 }
 </script>
 
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-200 dark:border-gray-700 flex flex-col h-full">
+  <div 
+    class="bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-200 dark:border-gray-700 flex flex-col h-full"
+  >
     <!-- Header -->
     <div class="flex-1">
       <!-- Status Badges -->
@@ -222,7 +226,7 @@ const handleEdit = () => {
       </div>
 
       <!-- ORGANIZER: Edit & Delete Buttons -->
-      <div v-if="userRole === 'ORGANIZER' && event.organizerId === authStore.user?.id" class="flex gap-2">
+      <div v-if="userRole === 'ORGANIZER' && isEventOwner" class="flex gap-2">
         <button
           @click="handleEdit"
           :disabled="loading"
@@ -241,15 +245,15 @@ const handleEdit = () => {
         </button>
       </div>
 
-      <!-- ADMIN: Approve Button -->
-      <div v-if="userRole === 'ADMIN' && !event.approved">
+      <!-- ADMIN: Manage Event Button -->
+      <div v-if="userRole === 'ADMIN'">
         <button
-          @click="handleApprove"
+          @click.stop="handleCardClick"
           :disabled="loading"
-          class="w-full btn bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 text-sm py-2 disabled:opacity-50"
+          class="w-full btn bg-purple-600 text-white hover:bg-purple-700 focus:ring-purple-500 text-sm py-2 disabled:opacity-50"
         >
-          <Check class="w-4 h-4 mr-1" />
-          Approve Event
+          <Settings class="w-4 h-4 mr-1" />
+          Manage Event
         </button>
       </div>
 

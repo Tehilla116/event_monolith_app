@@ -105,19 +105,32 @@ const handleSubmit = async () => {
       // Update existing event
       await eventsStore.updateEvent(props.eventToEdit.id, eventData)
       emit('updated')
+      // Reset form
+      resetForm()
     } else {
       // Create new event
       await eventsStore.createEvent(eventData)
       emit('created')
+      // Reset form
+      resetForm()
     }
-
-    // Close modal on success
-    closeModal()
   } catch (err: any) {
     error.value = err.response?.data?.error || `Failed to ${isEditMode.value ? 'update' : 'create'} event`
   } finally {
     loading.value = false
   }
+}
+
+/**
+ * Reset form fields
+ */
+const resetForm = () => {
+  title.value = ''
+  description.value = ''
+  date.value = ''
+  time.value = ''
+  location.value = ''
+  error.value = ''
 }
 
 /**
@@ -265,13 +278,6 @@ const minDate = computed(() => {
         <div v-if="error" class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
           <p class="text-sm text-red-600 dark:text-red-400">
             {{ error }}
-          </p>
-        </div>
-
-        <!-- Info Message for Organizers -->
-        <div v-if="!isEditMode" class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-          <p class="text-sm text-blue-600 dark:text-blue-400">
-            <strong>Note:</strong> Your event will need to be approved by an admin before it appears to attendees.
           </p>
         </div>
 

@@ -36,7 +36,14 @@ export const useEventsStore = defineStore('events', () => {
 
     try {
       const response = await api.get('/events')
-      events.value = response.data.events || []
+      const fetchedEvents = response.data.events || []
+      
+      // Remove duplicates based on event ID
+      const uniqueEvents = Array.from(
+        new Map(fetchedEvents.map((event: Event) => [event.id, event])).values()
+      ) as Event[]
+      
+      events.value = uniqueEvents
     } catch (err: any) {
       console.error('Error fetching events:', err)
       error.value = err.response?.data?.error || 'Failed to fetch events'
@@ -66,8 +73,11 @@ export const useEventsStore = defineStore('events', () => {
       const response = await api.post('/events', payload)
       const newEvent = response.data.event
 
-      // Add to local state
-      events.value.unshift(newEvent)
+      // Add to local state (only if WebSocket not connected or event doesn't exist)
+      const exists = events.value.find(e => e.id === newEvent.id)
+      if (!exists) {
+        events.value.unshift(newEvent)
+      }
 
       return newEvent
     } catch (err: any) {
@@ -87,7 +97,7 @@ export const useEventsStore = defineStore('events', () => {
     error.value = null
 
     try {
-      const response = await api.patch(`/events/${eventId}`, eventData)
+      const response = await api.put(`/events/${eventId}`, eventData)
       const updatedEvent = response.data.event
 
       // Update local state
@@ -236,9 +246,12 @@ export const useEventsStore = defineStore('events', () => {
 
     switch (message.type) {
       case 'EVENT_CREATED':
-        // Add new event to list
+        // Add new event to list (prevent duplicates)
         if (message.data.event) {
-          events.value.unshift(message.data.event)
+          const exists = events.value.find(e => e.id === message.data.event.id)
+          if (!exists) {
+            events.value.unshift(message.data.event)
+          }
         }
         break
 

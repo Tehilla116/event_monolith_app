@@ -27,8 +27,13 @@ function decodeToken(token: string): User | null {
     // Decode the payload (second part)
     const payload = JSON.parse(atob(parts[1]))
     
+    console.log('Decoded JWT payload:', payload)
+    
+    // The user ID might be in 'sub', 'userId', or 'id'
+    const userId = payload.sub || payload.userId || payload.id
+    
     return {
-      id: payload.id,
+      id: userId,
       email: payload.email,
       role: payload.role,
     }
@@ -142,6 +147,8 @@ export const useAuthStore = defineStore('auth', () => {
     const storedToken = localStorage.getItem('token')
     const storedUser = localStorage.getItem('user')
 
+    console.log('Checking auth...', { hasToken: !!storedToken, hasUser: !!storedUser })
+
     if (storedToken) {
       // Set token
       token.value = storedToken
@@ -149,15 +156,19 @@ export const useAuthStore = defineStore('auth', () => {
       // Try to get user from localStorage first
       if (storedUser) {
         try {
-          user.value = JSON.parse(storedUser)
+          const parsedUser = JSON.parse(storedUser)
+          console.log('Restored user from localStorage:', parsedUser)
+          user.value = parsedUser
         } catch (error) {
           console.error('Error parsing stored user:', error)
         }
       }
 
-      // If no user in localStorage, decode token
-      if (!user.value) {
+      // If no user in localStorage or user has no ID, decode token
+      if (!user.value || !user.value.id) {
+        console.log('Decoding token to get user data...')
         const decodedUser = decodeToken(storedToken)
+        console.log('Decoded user:', decodedUser)
         if (decodedUser) {
           user.value = decodedUser
           localStorage.setItem('user', JSON.stringify(decodedUser))
