@@ -187,7 +187,7 @@ const handleCardClick = () => {
       </div>
 
       <!-- RSVP Stats -->
-      <div v-if="event.rsvps && event.rsvps.length > 0" class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+      <div class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
         <div class="flex items-center gap-1">
           <CheckCircle class="w-4 h-4 text-green-500" />
           <span>{{ rsvpCounts.going }} Going</span>
