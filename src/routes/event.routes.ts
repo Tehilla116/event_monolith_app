@@ -12,11 +12,36 @@ import { isAuthenticated, isRole } from "../middleware/auth.middleware";
 import { prisma } from "../db";
 
 export const eventRoutes = new Elysia({ prefix: "/events" })
-  // GET /events - Get all approved events (all users)
+  .use(
+    jwt({
+      name: "jwt",
+      secret: process.env.JWT_SECRET || "default-secret-key",
+    })
+  )
+  // GET /events - Get all approved events (filtered by role)
   .get(
     "/",
-    async ({ set }) => {
-      const result = await getAllEvents();
+    async ({ set, headers, jwt }: any) => {
+      // Try to get user info from token if present
+      let userId: string | undefined;
+      let userRole: string | undefined;
+
+      const authHeader = headers.authorization;
+      if (authHeader?.startsWith("Bearer ")) {
+        const token = authHeader.substring(7);
+        try {
+          const decoded: any = await jwt.verify(token);
+          if (decoded) {
+            userId = decoded.userId;
+            userRole = decoded.role;
+          }
+        } catch (err) {
+          // Token invalid or expired, continue without user context
+          console.log("No valid token, showing all events");
+        }
+      }
+
+      const result = await getAllEvents(userId, userRole);
       set.status = result.status;
 
       if (!result.success) {
@@ -33,17 +58,11 @@ export const eventRoutes = new Elysia({ prefix: "/events" })
       detail: {
         tags: ["Events"],
         summary: "Get all approved events",
-        description: "Retrieve a list of all approved events",
+        description: "Retrieve a list of all approved events (organizers see only their own)",
       },
     }
   )
   // POST /events - Create new event (ORGANIZER only)
-  .use(
-    jwt({
-      name: "jwt",
-      secret: process.env.JWT_SECRET || "default-secret-key",
-    })
-  )
   .post(
     "/",
     async ({ headers, set, body, jwt }: any) => {

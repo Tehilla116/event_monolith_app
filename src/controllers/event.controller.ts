@@ -4,17 +4,26 @@ import { queryEvents } from "../builders/event-query.builder";
 
 /**
  * Get all approved events
+ * @param userId - Optional user ID for filtering organizer's events
+ * @param userRole - Optional user role to determine filtering logic
  * @returns List of approved events
  */
-export async function getAllEvents() {
+export async function getAllEvents(userId?: string, userRole?: string) {
   try {
     // Using Builder Pattern for cleaner, more maintainable query construction
-    const events = await queryEvents()
+    let query = queryEvents()
       .whereApproved()
       .includeOrganizer()
       .includeRSVPsWithUsers()
-      .orderByDateAsc()
-      .findMany();
+      .orderByDateAsc();
+
+    // If user is ORGANIZER, only show their own events
+    if (userRole === 'ORGANIZER' && userId) {
+      query = query.whereOrganizer(userId);
+    }
+    // ADMIN and ATTENDEE see all approved events
+
+    const events = await query.findMany();
 
     return {
       success: true,
