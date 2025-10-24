@@ -100,10 +100,12 @@ export const useEventsStore = defineStore('events', () => {
       const response = await api.put(`/events/${eventId}`, eventData)
       const updatedEvent = response.data.event
 
-      // Update local state
+      // Update local state immediately (optimistic update)
       const index = events.value.findIndex(e => e.id === eventId)
       if (index !== -1) {
-        events.value[index] = updatedEvent
+        // Use splice to ensure Vue reactivity is triggered
+        events.value.splice(index, 1, updatedEvent)
+        console.log('✅ Event updated locally:', updatedEvent.title)
       }
 
       return updatedEvent
@@ -264,9 +266,14 @@ export const useEventsStore = defineStore('events', () => {
       case 'EVENT_APPROVED':
         // Update existing event
         if (message.data.event) {
-          const index = events.value.findIndex(e => e.id === message.data.eventId)
+          const index = events.value.findIndex(e => e.id === message.data.event.id)
           if (index !== -1) {
-            events.value[index] = message.data.event
+            // Use splice to ensure Vue reactivity
+            events.value.splice(index, 1, message.data.event)
+            console.log('✅ Event updated via WebSocket:', message.data.event.title)
+          } else {
+            console.log('⚠️ Event not found in local state, adding it')
+            events.value.unshift(message.data.event)
           }
         }
         break
