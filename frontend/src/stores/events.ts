@@ -14,7 +14,7 @@ export const useEventsStore = defineStore('events', () => {
   const error = ref<string | null>(null)
   const ws = ref<WebSocket | null>(null)
   const wsRetryCount = ref(0)
-  const wsMaxRetries = ref(3) // Only retry 3 times
+  const wsMaxRetries = ref(10) // Only retry 10 times
   const wsRetryTimeout = ref<number | null>(null)
 
   // Getters
@@ -143,6 +143,33 @@ export const useEventsStore = defineStore('events', () => {
   }
 
   /**
+   * Approve an event (ADMIN only)
+   */
+  async function approveEvent(eventId: string) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await api.put(`/events/${eventId}/approve`)
+      const approvedEvent = response.data.event
+
+      // Update local state
+      const index = events.value.findIndex(e => e.id === eventId)
+      if (index !== -1) {
+        events.value.splice(index, 1, approvedEvent)
+      }
+
+      return approvedEvent
+    } catch (err: any) {
+      console.error('Error approving event:', err)
+      error.value = err.response?.data?.error || 'Failed to approve event'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
    * RSVP to an event
    */
   async function rsvpToEvent(eventId: string, status: RsvpStatus) {
@@ -171,33 +198,6 @@ export const useEventsStore = defineStore('events', () => {
       console.error('Error RSVPing to event:', err)
       error.value = err.response?.data?.error || 'Failed to RSVP'
       throw err
-    }
-  }
-
-  /**
-   * Approve an event (ADMIN only)
-   */
-  async function approveEvent(eventId: string) {
-    loading.value = true
-    error.value = null
-
-    try {
-      const response = await api.post(`/events/${eventId}/approve`)
-      const approvedEvent = response.data.event
-
-      // Update local state
-      const index = events.value.findIndex(e => e.id === eventId)
-      if (index !== -1) {
-        events.value[index] = approvedEvent
-      }
-
-      return approvedEvent
-    } catch (err: any) {
-      console.error('Error approving event:', err)
-      error.value = err.response?.data?.error || 'Failed to approve event'
-      throw err
-    } finally {
-      loading.value = false
     }
   }
 

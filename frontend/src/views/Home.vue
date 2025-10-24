@@ -169,6 +169,36 @@ const handleAdminEdit = (event: Event) => {
   eventToEdit.value = event
   showCreateModal.value = true
 }
+
+/**
+ * Handle approve event
+ */
+const handleApprove = async (eventId: string) => {
+  try {
+    await eventsStore.approveEvent(eventId)
+    showAdminModal.value = false
+    selectedAdminEvent.value = null
+    showToastNotification('Event approved successfully', 'success')
+  } catch (error) {
+    console.error('Error approving event:', error)
+    showToastNotification('Failed to approve event', 'error')
+  }
+}
+
+/**
+ * Handle reject event (delete)
+ */
+const handleReject = async (eventId: string) => {
+  try {
+    await eventsStore.deleteEvent(eventId)
+    showAdminModal.value = false
+    selectedAdminEvent.value = null
+    showToastNotification('Event rejected and deleted', 'success')
+  } catch (error) {
+    console.error('Error rejecting event:', error)
+    showToastNotification('Failed to reject event', 'error')
+  }
+}
 </script>
 
 <template>
@@ -257,6 +287,8 @@ const handleAdminEdit = (event: Event) => {
       @close="handleAdminModalClose"
       @delete="handleAdminDelete"
       @edit="handleAdminEdit"
+      @approve="handleApprove"
+      @reject="handleReject"
     />
 
     <!-- Confirm Delete Modal -->

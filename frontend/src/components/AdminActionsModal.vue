@@ -15,6 +15,8 @@ const emit = defineEmits<{
   close: []
   delete: [eventId: string]
   edit: [event: Event]
+  approve: [eventId: string]
+  reject: [eventId: string]
 }>()
 
 const loading = ref(false)
@@ -36,6 +38,16 @@ const handleDelete = async () => {
 const handleEdit = () => {
   if (!props.event) return
   emit('edit', props.event)
+}
+
+const handleApprove = () => {
+  if (!props.event) return
+  emit('approve', props.event.id)
+}
+
+const handleReject = () => {
+  if (!props.event) return
+  emit('reject', props.event.id)
 }
 
 const handleClose = () => {
@@ -304,30 +316,53 @@ const toggleAttendees = () => {
             </div>
 
             <!-- Actions -->
-            <div class="flex gap-3 p-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
-              <button
-                @click="handleEdit"
-                :disabled="loading"
-                class="flex-1 btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Pencil class="w-4 h-4 mr-2" />
-                Edit Event
-              </button>
-              <button
-                @click="handleDelete"
-                :disabled="loading"
-                class="flex-1 btn btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Trash2 class="w-4 h-4 mr-2" />
-                Delete Event
-              </button>
-              <button
-                @click="handleClose"
-                :disabled="loading"
-                class="btn bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
-              >
-                Cancel
-              </button>
+            <div class="p-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+              <!-- Approval Actions (only for pending events) -->
+              <div v-if="!event.approved" class="flex gap-3 mb-3">
+                <button
+                  @click="handleApprove"
+                  :disabled="loading"
+                  class="flex-1 btn bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <CheckCircle class="w-4 h-4 mr-2" />
+                  Approve Event
+                </button>
+                <button
+                  @click="handleReject"
+                  :disabled="loading"
+                  class="flex-1 btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <XCircle class="w-4 h-4 mr-2" />
+                  Reject Event
+                </button>
+              </div>
+
+              <!-- Standard Actions -->
+              <div class="flex gap-3">
+                <button
+                  @click="handleEdit"
+                  :disabled="loading"
+                  class="flex-1 btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Pencil class="w-4 h-4 mr-2" />
+                  Edit Event
+                </button>
+                <button
+                  @click="handleDelete"
+                  :disabled="loading"
+                  class="flex-1 btn btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Trash2 class="w-4 h-4 mr-2" />
+                  Delete Event
+                </button>
+                <button
+                  @click="handleClose"
+                  :disabled="loading"
+                  class="btn bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
 
             <!-- Loading Overlay -->
