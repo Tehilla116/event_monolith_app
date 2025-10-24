@@ -135,48 +135,48 @@ const handleCardClick = () => {
 
 <template>
   <div 
-    class="bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-200 dark:border-gray-700 flex flex-col h-full"
+    class="bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-6 border border-gray-200 dark:border-gray-700 flex flex-col h-full"
   >
     <!-- Header -->
     <div class="flex-1">
       <!-- Status Badges -->
-      <div class="flex items-center gap-2 mb-3">
+      <div class="flex items-center gap-2 mb-3 flex-wrap">
         <span
           v-if="!event.approved"
-          class="badge badge-warning"
+          class="badge badge-warning text-xs"
         >
           Pending Approval
         </span>
         <span
           v-if="isEventPast"
-          class="badge bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+          class="badge bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 text-xs"
         >
           Past Event
         </span>
       </div>
 
       <!-- Title -->
-      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+      <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2">
         {{ event.title }}
       </h3>
 
       <!-- Description -->
-      <p class="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
+      <p class="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
         {{ event.description }}
       </p>
 
       <!-- Event Details -->
       <div class="space-y-2 mb-4">
         <!-- Date -->
-        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-          <Calendar class="w-4 h-4 mr-2 flex-shrink-0" />
-          <span>{{ formattedDate }}</span>
+        <div class="flex items-start text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+          <Calendar class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+          <span class="break-words">{{ formattedDate }}</span>
         </div>
 
         <!-- Location -->
-        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-          <MapPin class="w-4 h-4 mr-2 flex-shrink-0" />
-          <span>{{ event.location }}</span>
+        <div class="flex items-start text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+          <MapPin class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+          <span class="break-words">{{ event.location }}</span>
         </div>
 
         <!-- Organizer -->
@@ -244,11 +244,11 @@ const handleCardClick = () => {
     <!-- Action Buttons -->
     <div class="mt-4 space-y-2">
       <!-- ATTENDEE: RSVP Buttons -->
-      <div v-if="userRole === 'ATTENDEE' && event.approved && !isEventPast" class="flex gap-2">
+      <div v-if="userRole === 'ATTENDEE' && event.approved && !isEventPast" class="flex flex-col sm:flex-row gap-2">
         <button
           @click="handleRsvp('GOING')"
           :disabled="loading || (isEventFull && userRsvp?.status !== 'GOING')"
-          class="flex-1 btn btn-success text-sm py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="flex-1 btn btn-success text-xs sm:text-sm py-2 disabled:opacity-50 disabled:cursor-not-allowed justify-center"
           :class="{ 'ring-2 ring-green-500': userRsvp?.status === 'GOING' }"
           :title="isEventFull && userRsvp?.status !== 'GOING' ? 'Event is full' : ''"
         >
@@ -258,7 +258,7 @@ const handleCardClick = () => {
         <button
           @click="handleRsvp('MAYBE')"
           :disabled="loading"
-          class="flex-1 btn bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-400 text-sm py-2 disabled:opacity-50"
+          class="flex-1 btn bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-400 text-xs sm:text-sm py-2 disabled:opacity-50 justify-center"
           :class="{ 'ring-2 ring-yellow-500': userRsvp?.status === 'MAYBE' }"
         >
           <HelpCircle class="w-4 h-4 mr-1" />
@@ -267,7 +267,7 @@ const handleCardClick = () => {
         <button
           @click="handleRsvp('NOT_GOING')"
           :disabled="loading"
-          class="flex-1 btn bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-400 text-sm py-2 disabled:opacity-50"
+          class="flex-1 btn bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-400 text-xs sm:text-sm py-2 disabled:opacity-50 justify-center"
           :class="{ 'ring-2 ring-gray-500': userRsvp?.status === 'NOT_GOING' }"
         >
           <XCircle class="w-4 h-4 mr-1" />
@@ -276,11 +276,11 @@ const handleCardClick = () => {
       </div>
 
       <!-- ORGANIZER: Edit & Delete Buttons -->
-      <div v-if="userRole === 'ORGANIZER' && isEventOwner" class="flex gap-2">
+      <div v-if="userRole === 'ORGANIZER' && isEventOwner" class="flex flex-col sm:flex-row gap-2">
         <button
           @click="handleEdit"
           :disabled="loading"
-          class="flex-1 btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 text-sm py-2 disabled:opacity-50"
+          class="flex-1 btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 text-xs sm:text-sm py-2 disabled:opacity-50 justify-center"
         >
           <Pencil class="w-4 h-4 mr-1" />
           Edit
@@ -288,7 +288,7 @@ const handleCardClick = () => {
         <button
           @click="handleDelete"
           :disabled="loading"
-          class="flex-1 btn btn-danger text-sm py-2 disabled:opacity-50"
+          class="flex-1 btn btn-danger text-xs sm:text-sm py-2 disabled:opacity-50 justify-center"
         >
           <Trash2 class="w-4 h-4 mr-1" />
           Delete
@@ -300,7 +300,7 @@ const handleCardClick = () => {
         <button
           @click.stop="handleCardClick"
           :disabled="loading"
-          class="w-full btn bg-purple-600 text-white hover:bg-purple-700 focus:ring-purple-500 text-sm py-2 disabled:opacity-50"
+          class="w-full btn bg-purple-600 text-white hover:bg-purple-700 focus:ring-purple-500 text-xs sm:text-sm py-2 disabled:opacity-50 justify-center"
         >
           <Settings class="w-4 h-4 mr-1" />
           Manage Event
