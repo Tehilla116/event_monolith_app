@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { LogOut, Calendar } from 'lucide-vue-next'
 import { useAuthStore } from '../stores/auth'
+import { useRouter } from 'vue-router'
 
 /**
  * Navbar Component
  * Displays app title, user info, and logout button
  */
 const authStore = useAuthStore()
+const router = useRouter()
 
 const handleLogout = () => {
   authStore.logout()
+  router.push('/login')
 }
 </script>
 

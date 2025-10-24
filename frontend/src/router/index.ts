@@ -73,4 +73,12 @@ router.beforeEach((to, _from, next) => {
   }
 })
 
+/**
+ * Handle unauthorized events from API interceptor
+ * Redirects to login when 401 errors occur
+ */
+window.addEventListener('auth:unauthorized', () => {
+  router.push('/login')
+})
+
 export default router

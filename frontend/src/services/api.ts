@@ -47,10 +47,9 @@ api.interceptors.response.use(
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       
-      // Redirect to login page if not already there
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login'
-      }
+      // Emit custom event for router to handle
+      // This avoids using window.location.href which breaks SPA routing
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'))
     }
     
     return Promise.reject(error)

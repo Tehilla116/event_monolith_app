@@ -135,8 +135,8 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
 
-    // Redirect to login page
-    window.location.href = '/login'
+    // Use Vue Router for navigation (will be called from components with router access)
+    // Components should call logout() then router.push('/login')
   }
 
   /**
