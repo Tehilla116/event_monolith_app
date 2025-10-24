@@ -49,7 +49,7 @@ const router = createRouter({
  * Global Navigation Guard
  * Handles authentication checks before each route change
  */
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
   const isAuthenticated = authStore.isAuthenticated
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { X, AlertTriangle, Trash2, CheckCircle, Info } from 'lucide-vue-next'
+import { AlertTriangle, Trash2, CheckCircle, Info } from 'lucide-vue-next'
 
 interface Props {
   show: boolean
@@ -10,7 +10,7 @@ interface Props {
   cancelText?: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   type: 'danger',
   confirmText: 'Confirm',
   cancelText: 'Cancel'
