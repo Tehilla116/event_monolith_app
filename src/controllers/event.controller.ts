@@ -288,6 +288,13 @@ export async function deleteEvent(
     // Find the event first
     const event = await prisma.event.findUnique({
       where: { id: eventId },
+      include: {
+        organizer: {
+          select: {
+            email: true,
+          },
+        },
+      },
     });
 
     if (!event) {
@@ -306,6 +313,10 @@ export async function deleteEvent(
         status: 403,
       };
     }
+
+    // Check if admin is deleting someone else's event
+    const isAdminDeletingOrganizerEvent = 
+      userRole === "ADMIN" && event.organizerId !== userId;
 
     // Get all RSVPs with user emails before deletion
     const rsvps = await prisma.rSVP.findMany({
@@ -345,6 +356,20 @@ export async function deleteEvent(
         )
       ).then(() => {
         console.log(`📧 Sent deletion notifications to ${rsvps.length} attendee(s)`);
+      });
+    }
+
+    // If admin is deleting organizer's event, notify the organizer
+    if (isAdminDeletingOrganizerEvent && event.organizer) {
+      const { sendEventDeletedByAdminEmail } = await import("../services/email.service");
+      
+      sendEventDeletedByAdminEmail(
+        event.organizer.email,
+        event.title,
+        event.date,
+        "Your event was deleted by an administrator."
+      ).catch((error) => {
+        console.error(`Failed to send deletion notification to organizer:`, error);
       });
     }
 

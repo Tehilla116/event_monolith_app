@@ -283,6 +283,102 @@ export class EmailFactory {
   }
 
   /**
+   * Create event rejected notification email (for organizer)
+   */
+  static createEventRejectedEmail(
+    email: string,
+    eventTitle: string,
+    eventDate: Date,
+    reason?: string
+  ): SendMailOptions {
+    const content = `
+      <div class="header">
+        <h1>Event Not Approved ❌</h1>
+      </div>
+      <div class="content">
+        <p>Hello,</p>
+        
+        <div class="danger">
+          <p><strong>Notice:</strong> Your event submission has not been approved by the administrator.</p>
+        </div>
+
+        <div class="features">
+          <h3>Event Details:</h3>
+          <p><strong>Event:</strong> ${eventTitle}</p>
+          <p><strong>Scheduled Date:</strong> ${new Date(eventDate).toLocaleDateString()}</p>
+          ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+        </div>
+
+        <p>Your event has been rejected and will not appear to attendees. If you believe this was a mistake, please contact the administrator.</p>
+
+        <div class="cta">
+          <a href="#" class="button">Create New Event</a>
+        </div>
+
+        <p>Best regards,<br/>
+        <strong>The Event App Team</strong></p>
+      </div>
+    `;
+
+    return {
+      from: FROM_EMAIL,
+      to: email,
+      subject: `Event Not Approved: ${eventTitle}`,
+      html: getEmailTemplate(content),
+      text: this.stripHtml(content),
+    };
+  }
+
+  /**
+   * Create event deleted by admin notification email (for organizer)
+   */
+  static createEventDeletedByAdminEmail(
+    email: string,
+    eventTitle: string,
+    eventDate: Date,
+    reason?: string
+  ): SendMailOptions {
+    const content = `
+      <div class="header">
+        <h1>Event Deleted by Admin 🗑️</h1>
+      </div>
+      <div class="content">
+        <p>Hello,</p>
+        
+        <div class="danger">
+          <p><strong>Notice:</strong> Your event has been deleted by an administrator.</p>
+        </div>
+
+        <div class="features">
+          <h3>Event Details:</h3>
+          <p><strong>Event:</strong> ${eventTitle}</p>
+          <p><strong>Scheduled Date:</strong> ${new Date(eventDate).toLocaleDateString()}</p>
+          ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+        </div>
+
+        <p>This event has been removed from the system. All attendees who RSVPed have been notified of the cancellation.</p>
+
+        <p>If you have questions about this action, please contact the administrator.</p>
+
+        <div class="cta">
+          <a href="#" class="button">View My Events</a>
+        </div>
+
+        <p>Best regards,<br/>
+        <strong>The Event App Team</strong></p>
+      </div>
+    `;
+
+    return {
+      from: FROM_EMAIL,
+      to: email,
+      subject: `Event Deleted: ${eventTitle}`,
+      html: getEmailTemplate(content),
+      text: this.stripHtml(content),
+    };
+  }
+
+  /**
    * Helper: Strip HTML tags for plain text version
    */
   private static stripHtml(html: string): string {

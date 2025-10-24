@@ -216,3 +216,75 @@ export async function sendEventUpdatedEmail(
     throw error;
   }
 }
+
+/**
+ * Send event rejected notification to organizer
+ * @param email - Organizer's email address
+ * @param eventTitle - Title of the rejected event
+ * @param eventDate - Date of the event
+ * @param reason - Optional reason for rejection
+ */
+export async function sendEventRejectedEmail(
+  email: string,
+  eventTitle: string,
+  eventDate: Date,
+  reason?: string
+) {
+  try {
+    const transport = await initializeTransporter();
+    const mailOptions = EmailFactory.createEventRejectedEmail(email, eventTitle, eventDate, reason);
+
+    const info = await transport.sendMail(mailOptions);
+
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+    
+    console.log("📧 Event rejection notification sent!");
+    console.log(`   To: ${email}`);
+    console.log(`   Preview URL: ${previewUrl}`);
+
+    return {
+      success: true,
+      messageId: info.messageId,
+      previewUrl,
+    };
+  } catch (error) {
+    console.error("❌ Failed to send rejection notification:", error);
+    throw error;
+  }
+}
+
+/**
+ * Send event deleted by admin notification to organizer
+ * @param email - Organizer's email address
+ * @param eventTitle - Title of the deleted event
+ * @param eventDate - Date of the event
+ * @param reason - Optional reason for deletion
+ */
+export async function sendEventDeletedByAdminEmail(
+  email: string,
+  eventTitle: string,
+  eventDate: Date,
+  reason?: string
+) {
+  try {
+    const transport = await initializeTransporter();
+    const mailOptions = EmailFactory.createEventDeletedByAdminEmail(email, eventTitle, eventDate, reason);
+
+    const info = await transport.sendMail(mailOptions);
+
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+    
+    console.log("📧 Event deletion notification sent to organizer!");
+    console.log(`   To: ${email}`);
+    console.log(`   Preview URL: ${previewUrl}`);
+
+    return {
+      success: true,
+      messageId: info.messageId,
+      previewUrl,
+    };
+  } catch (error) {
+    console.error("❌ Failed to send deletion notification:", error);
+    throw error;
+  }
+}
