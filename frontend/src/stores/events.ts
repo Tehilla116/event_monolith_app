@@ -2,12 +2,14 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../services/api'
 import type { Event, RsvpStatus } from '../types'
+import { useAuthStore } from './auth'
 
 /**
  * Events Store
  * Manages event data and real-time updates via WebSocket
  */
 export const useEventsStore = defineStore('events', () => {
+  const authStore = useAuthStore()
   // State
   const events = ref<Event[]>([])
   const loading = ref(false)
@@ -32,6 +34,7 @@ export const useEventsStore = defineStore('events', () => {
 
   /**
    * Fetch all events from API
+   * For admins, also fetches pending events
    */
   async function fetchEvents() {
     loading.value = true
@@ -39,7 +42,20 @@ export const useEventsStore = defineStore('events', () => {
 
     try {
       const response = await api.get('/events')
-      const fetchedEvents = response.data.events || []
+      let fetchedEvents = response.data.events || []
+      
+      // If user is admin, also fetch pending events
+      if (authStore.userRole === 'ADMIN') {
+        try {
+          const pendingResponse = await api.get('/events/pending')
+          const pendingEvents = pendingResponse.data.events || []
+          // Combine approved and pending events
+          fetchedEvents = [...fetchedEvents, ...pendingEvents]
+        } catch (err: any) {
+          console.warn('Failed to fetch pending events:', err)
+          // Continue with just approved events if pending fetch fails
+        }
+      }
       
       // Remove duplicates based on event ID
       const uniqueEvents = Array.from(
