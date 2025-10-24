@@ -1,0 +1,79 @@
+name: event-monolith-app
+region: nyc
+
+# Backend API Service
+services:
+  - name: backend
+    github:
+      repo: Tehilla116/event_monolith_app
+      branch: digitalocean-deployment
+      deploy_on_push: true
+    
+    source_dir: /
+    
+    build_command: bun install
+    run_command: bun src/index.ts
+    
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    
+    http_port: 3001
+    
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+        scope: RUN_TIME
+      - key: JWT_SECRET
+        value: ${JWT_SECRET}
+        scope: RUN_TIME
+        type: SECRET
+      - key: JWT_EXPIRES_IN
+        value: "7d"
+      - key: EMAIL_HOST
+        value: "smtp.ethereal.email"
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_FROM
+        value: "noreply@eventapp.com"
+    
+    health_check:
+      http_path: /
+      initial_delay_seconds: 30
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+
+# Frontend Static Site
+static_sites:
+  - name: frontend
+    github:
+      repo: Tehilla116/event_monolith_app
+      branch: digitalocean-deployment
+      deploy_on_push: true
+    
+    source_dir: /frontend
+    
+    build_command: npm install && npm run build
+    output_dir: dist
+    
+    envs:
+      - key: VITE_API_URL
+        value: ${backend.PUBLIC_URL}
+        scope: BUILD_TIME
+    
+    routes:
+      - path: /
+    
+    catchall_document: index.html
+
+# Database (use existing Neon PostgreSQL)
+# databases:
+#   - name: db
+#     engine: PG
+#     version: "14"
+#     production: false
