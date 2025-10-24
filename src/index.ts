@@ -7,13 +7,17 @@ import { setServerInstance } from "./services/websocket.service";
 
 const app = new Elysia()
   .onError(({ code, error, set }) => {
-    console.error("🚨 Server error:", code, error.message);
+    const errorMessage = error && typeof error === 'object' && 'message' in error 
+      ? (error as Error).message 
+      : 'An error occurred';
+    
+    console.error("🚨 Server error:", code, errorMessage);
     
     if (code === 'VALIDATION') {
       set.status = 422;
       return {
         error: 'Validation failed',
-        message: error.message,
+        message: errorMessage,
         details: error
       };
     }
@@ -26,7 +30,7 @@ const app = new Elysia()
     set.status = 500;
     return {
       error: 'Internal server error',
-      message: error.message
+      message: errorMessage
     };
   })
   .use(cors())

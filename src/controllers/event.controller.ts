@@ -1,5 +1,6 @@
 import { prisma } from "../db";
 import { broadcastEventUpdate } from "../services/websocket.service";
+import { queryEvents } from "../builders/event-query.builder";
 
 /**
  * Get all approved events
@@ -7,30 +8,13 @@ import { broadcastEventUpdate } from "../services/websocket.service";
  */
 export async function getAllEvents() {
   try {
-    const events = await prisma.event.findMany({
-      where: {
-        approved: true,
-      },
-      include: {
-        organizer: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
-          },
-        },
-        rsvps: {
-          select: {
-            id: true,
-            status: true,
-            userId: true,
-          },
-        },
-      },
-      orderBy: {
-        date: "asc",
-      },
-    });
+    // Using Builder Pattern for cleaner, more maintainable query construction
+    const events = await queryEvents()
+      .whereApproved()
+      .includeOrganizer()
+      .includeRSVPsWithUsers()
+      .orderByDateAsc()
+      .findMany();
 
     return {
       success: true,
@@ -154,6 +138,21 @@ export async function updateEvent(
       };
     }
 
+    // Build a description of changes
+    const changes: string[] = [];
+    if (eventData.title && eventData.title !== event.title) {
+      changes.push(`Title changed to: ${eventData.title}`);
+    }
+    if (eventData.description && eventData.description !== event.description) {
+      changes.push(`Description updated`);
+    }
+    if (eventData.date && eventData.date.getTime() !== event.date.getTime()) {
+      changes.push(`Date changed to: ${eventData.date.toLocaleString()}`);
+    }
+    if (eventData.location && eventData.location !== event.location) {
+      changes.push(`Location changed to: ${eventData.location}`);
+    }
+
     // Update the event
     const updatedEvent = await prisma.event.update({
       where: { id: eventId },
@@ -168,6 +167,42 @@ export async function updateEvent(
         },
       },
     });
+
+    // Get all RSVPs with user emails to send notifications
+    if (changes.length > 0) {
+      const rsvps = await prisma.rSVP.findMany({
+        where: { eventId: eventId },
+        include: {
+          user: {
+            select: {
+              email: true,
+            },
+          },
+        },
+      });
+
+      // Send update notifications to all attendees (asynchronously)
+      if (rsvps.length > 0) {
+        const { sendEventUpdatedEmail } = await import("../services/email.service");
+        
+        const changesText = changes.join("; ");
+        
+        Promise.all(
+          rsvps.map((rsvp) =>
+            sendEventUpdatedEmail(
+              rsvp.user.email,
+              updatedEvent.title,
+              updatedEvent.date,
+              changesText
+            ).catch((error) => {
+              console.error(`Failed to send update email to ${rsvp.user.email}:`, error);
+            })
+          )
+        ).then(() => {
+          console.log(`📧 Sent update notifications to ${rsvps.length} attendee(s)`);
+        });
+      }
+    }
 
     // Broadcast event update to WebSocket clients
     broadcastEventUpdate({
@@ -230,10 +265,46 @@ export async function deleteEvent(
       };
     }
 
+    // Get all RSVPs with user emails before deletion
+    const rsvps = await prisma.rSVP.findMany({
+      where: { eventId: eventId },
+      include: {
+        user: {
+          select: {
+            email: true,
+          },
+        },
+      },
+    });
+
+    // Delete all RSVPs associated with the event
+    await prisma.rSVP.deleteMany({
+      where: { eventId: eventId },
+    });
+
     // Delete the event
     await prisma.event.delete({
       where: { id: eventId },
     });
+
+    // Send deletion notifications to all attendees (asynchronously)
+    if (rsvps.length > 0) {
+      const { sendEventDeletedEmail } = await import("../services/email.service");
+      
+      Promise.all(
+        rsvps.map((rsvp) =>
+          sendEventDeletedEmail(
+            rsvp.user.email,
+            event.title,
+            event.date
+          ).catch((error) => {
+            console.error(`Failed to send deletion email to ${rsvp.user.email}:`, error);
+          })
+        )
+      ).then(() => {
+        console.log(`📧 Sent deletion notifications to ${rsvps.length} attendee(s)`);
+      });
+    }
 
     // Broadcast event deletion to WebSocket clients
     broadcastEventUpdate({
