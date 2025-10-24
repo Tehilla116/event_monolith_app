@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { UserPlus, Mail, Lock, Calendar, Users } from 'lucide-vue-next'
+import { UserPlus, Mail, Lock, Calendar } from 'lucide-vue-next'
 
 /**
  * Register/Signup View

@@ -108,7 +108,7 @@ export const useAuthStore = defineStore('auth', () => {
    */
   async function register(email: string, password: string, role: 'ATTENDEE' | 'ORGANIZER' = 'ATTENDEE'): Promise<boolean> {
     try {
-      const response = await api.post('/auth/signup', {
+      await api.post('/auth/signup', {
         email,
         password,
         role,
