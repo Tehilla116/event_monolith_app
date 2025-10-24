@@ -206,7 +206,12 @@ export const useEventsStore = defineStore('events', () => {
     }
 
     try {
-      ws.value = new WebSocket('ws://localhost:8080/ws')
+      // Use production WebSocket URL or localhost
+      const wsUrl = import.meta.env.VITE_API_URL 
+        ? import.meta.env.VITE_API_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/ws'
+        : 'ws://localhost:8080/ws'
+      
+      ws.value = new WebSocket(wsUrl)
 
       ws.value.onopen = () => {
         console.log('✅ WebSocket connected')
