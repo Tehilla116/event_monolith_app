@@ -33,9 +33,9 @@ export function signToken(payload: JWTPayload): string {
       },
       JWT_SECRET,
       {
-        expiresIn: JWT_EXPIRES_IN as string,
+        expiresIn: JWT_EXPIRES_IN,
         issuer: "event-management-app",
-      }
+      } as jwt.SignOptions
     );
 
     return token;
