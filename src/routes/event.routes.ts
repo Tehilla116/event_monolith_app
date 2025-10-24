@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import {
   getAllEvents,
+  getPendingEvents,
   createEvent,
   updateEvent,
   deleteEvent,
@@ -59,6 +60,52 @@ export const eventRoutes = new Elysia({ prefix: "/events" })
         tags: ["Events"],
         summary: "Get all approved events",
         description: "Retrieve a list of all approved events (organizers see only their own)",
+      },
+    }
+  )
+  // GET /events/pending - Get pending events (ADMIN only)
+  .get(
+    "/pending",
+    async ({ set, headers, jwt }: any) => {
+      // Check authentication
+      const authHeader = headers.authorization;
+      if (!authHeader?.startsWith("Bearer ")) {
+        set.status = 401;
+        return { error: "Authorization required" };
+      }
+
+      const token = authHeader.substring(7);
+      try {
+        const decoded: any = await jwt.verify(token);
+        if (!decoded) {
+          set.status = 401;
+          return { error: "Invalid token" };
+        }
+
+        // Check if user is ADMIN
+        if (decoded.role !== "ADMIN") {
+          set.status = 403;
+          return { error: "Admin access required" };
+        }
+
+        const result = await getPendingEvents();
+        set.status = result.status;
+
+        if (!result.success) {
+          return { error: result.error };
+        }
+
+        return { events: result.events };
+      } catch (err) {
+        set.status = 401;
+        return { error: "Invalid or expired token" };
+      }
+    },
+    {
+      detail: {
+        tags: ["Events"],
+        summary: "Get pending events (ADMIN only)",
+        description: "Retrieve all events awaiting admin approval",
       },
     }
   )

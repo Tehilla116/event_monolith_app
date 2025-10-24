@@ -17,11 +17,16 @@ export async function getAllEvents(userId?: string, userRole?: string) {
       .includeRSVPsWithUsers()
       .orderByDateAsc();
 
-    // If user is ORGANIZER, only show their own events
+    // If user is ORGANIZER, show both approved and their pending events
     if (userRole === 'ORGANIZER' && userId) {
-      query = query.whereOrganizer(userId);
+      query = queryEvents()
+        .includeOrganizer()
+        .includeRSVPsWithUsers()
+        .whereOrganizer(userId)
+        .orderByDateAsc();
     }
-    // ADMIN and ATTENDEE see all approved events
+    // ADMIN sees all events (approved and pending) - handled separately
+    // ATTENDEE sees only approved events
 
     const events = await query.findMany();
 
@@ -35,6 +40,34 @@ export async function getAllEvents(userId?: string, userRole?: string) {
     return {
       success: false,
       error: "Failed to fetch events",
+      status: 500,
+    };
+  }
+}
+
+/**
+ * Get all pending events (ADMIN only)
+ * @returns List of pending events awaiting approval
+ */
+export async function getPendingEvents() {
+  try {
+    const events = await queryEvents()
+      .wherePending()
+      .includeOrganizer()
+      .includeRSVPsWithUsers()
+      .orderByCreatedDesc()
+      .findMany();
+
+    return {
+      success: true,
+      events,
+      status: 200,
+    };
+  } catch (error) {
+    console.error("Error fetching pending events:", error);
+    return {
+      success: false,
+      error: "Failed to fetch pending events",
       status: 500,
     };
   }
@@ -64,7 +97,7 @@ export async function createEvent(
         date: eventData.date,
         location: eventData.location,
         organizerId: userId, // Use organizerId from ctx.user.id
-        approved: true, // Auto-approve for now (change to false for production)
+        approved: false, // Requires admin approval
       },
       include: {
         organizer: {
@@ -77,7 +110,7 @@ export async function createEvent(
       },
     });
 
-    console.log("Event created successfully:", newEvent);
+    console.log("Event created successfully (pending approval):", newEvent);
 
     // Broadcast the new event to connected clients
     broadcastEventUpdate({
