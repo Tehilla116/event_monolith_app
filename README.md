@@ -63,7 +63,7 @@ event_monolith_app/
 │   ├── factories/            # Object factories
 │   │   └── email.factory.ts
 │   ├── middleware/           # Express-style middleware
-│   │   └── auth.middleware.ts
+│   │   └── auth.middleware.tsmail
 │   ├── patterns/             # Design pattern implementations
 │   │   └── command.pattern.ts
 │   ├── routes/               # API routes
@@ -358,6 +358,96 @@ SMTP_PASS=your-password
 - **Admin Dashboard** - Manage events with attendee viewer
 - **Event Cards** - Interactive cards with RSVP buttons
 - **Confirmation Dialogs** - Custom styled confirmation modals
+
+## 📦 State Management with Pinia
+
+The application uses **Pinia** for centralized state management. Pinia provides a simple and type-safe way to manage application state with full TypeScript support.
+
+### Store Architecture
+
+#### Auth Store (`stores/auth.ts`)
+Manages authentication state and user information:
+- ✅ User login/logout
+- ✅ Token management (localStorage + state)
+- ✅ Role-based access (ADMIN, ORGANIZER, ATTENDEE)
+- ✅ Automatic token refresh
+- ✅ User profile data
+
+```typescript
+// Usage example
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+await authStore.login(email, password)
+const user = authStore.user
+const isAdmin = authStore.userRole === 'ADMIN'
+```
+
+#### Events Store (`stores/events.ts`)
+Manages event data and real-time updates:
+- ✅ Event CRUD operations
+- ✅ WebSocket connection for live updates
+- ✅ Automatic reconnection with retry logic
+- ✅ Filtered views (approved, pending, user-specific)
+- ✅ RSVP management
+- ✅ Event approval workflow
+
+```typescript
+// Usage example
+import { useEventsStore } from '@/stores/events'
+
+const eventsStore = useEventsStore()
+await eventsStore.fetchEvents()
+const upcomingEvents = eventsStore.upcomingEvents
+eventsStore.connectWebSocket() // Real-time updates
+```
+
+### Pinia Features Used
+
+- **Composition API**: Modern, type-safe store definitions
+- **Getters**: Computed properties for filtered/transformed data
+- **Actions**: Async operations with error handling
+- **State Persistence**: Critical data persisted to localStorage
+- **DevTools Integration**: Full debugging support in Vue DevTools
+
+### Store Structure
+
+```typescript
+// Example store structure
+export const useExampleStore = defineStore('example', () => {
+  // State
+  const items = ref<Item[]>([])
+  const loading = ref(false)
+  
+  // Getters
+  const activeItems = computed(() => 
+    items.value.filter(item => item.active)
+  )
+  
+  // Actions
+  async function fetchItems() {
+    loading.value = true
+    try {
+      const response = await api.get('/items')
+      items.value = response.data
+    } catch (error) {
+      console.error('Failed to fetch items:', error)
+    } finally {
+      loading.value = false
+    }
+  }
+  
+  return {
+    // State
+    items,
+    loading,
+    // Getters
+    activeItems,
+    // Actions
+    fetchItems
+  }
+})
+```
 
 ## 🔐 User Roles & Permissions
 
