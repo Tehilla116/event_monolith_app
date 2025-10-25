@@ -98,7 +98,10 @@ const app = new Elysia()
       ws.unsubscribe("rsvps");
     },
   })
-  .listen(process.env.PORT || 8080);
+  .listen({
+    hostname: "0.0.0.0",
+    port: Number(process.env.PORT) || 3001,
+  });
 
 // Pass the app server instance to websocket service for publishing
 setServerInstance(app.server);
