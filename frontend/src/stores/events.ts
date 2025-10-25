@@ -80,6 +80,7 @@ export const useEventsStore = defineStore('events', () => {
     description: string
     date: string
     location: string
+    maxAttendees?: number | null
   }) {
     loading.value = true
     error.value = null
