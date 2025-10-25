@@ -11,8 +11,8 @@ services:
     
     source_dir: /
     
-    build_command: bun install
-    run_command: bun src/index.ts
+    build_command: curl -fsSL https://bun.sh/install | bash && export PATH="$HOME/.bun/bin:$PATH" && bun install
+    run_command: export PATH="$HOME/.bun/bin:$PATH" && bun src/index.ts
     
     instance_count: 1
     instance_size_slug: basic-xxs
