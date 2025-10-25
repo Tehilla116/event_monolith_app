@@ -175,6 +175,7 @@ export const eventRoutes = new Elysia({ prefix: "/events" })
           description: body.description,
           date: new Date(body.date),
           location: body.location,
+          maxAttendees: body.maxAttendees,
         });
         
         set.status = result.status;
@@ -214,6 +215,10 @@ export const eventRoutes = new Elysia({ prefix: "/events" })
           minLength: 3,
           error: "Location must be at least 3 characters",
         }),
+        maxAttendees: t.Optional(t.Nullable(t.Number({
+          minimum: 1,
+          error: "Maximum attendees must be at least 1 if specified",
+        }))),
       }),
       detail: {
         tags: ["Events"],
@@ -287,6 +292,7 @@ export const eventRoutes = new Elysia({ prefix: "/events" })
         if (body.description) updateData.description = body.description;
         if (body.date) updateData.date = new Date(body.date);
         if (body.location) updateData.location = body.location;
+        if (body.maxAttendees !== undefined) updateData.maxAttendees = body.maxAttendees;
 
         // Update event
         const result = await updateEvent(
