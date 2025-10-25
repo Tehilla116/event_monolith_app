@@ -19,7 +19,7 @@ const sizeClasses = {
 <template>
   <div class="flex items-center justify-center">
     <div
-      :class="[sizeClasses[size], color]"
+      :class="[sizeClasses[props.size], props.color]"
       class="animate-spin rounded-full border-4 border-current border-t-transparent"
       role="status"
       aria-label="Loading"
