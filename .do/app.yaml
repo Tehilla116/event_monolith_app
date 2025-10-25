@@ -9,6 +9,7 @@ services:
       branch: digitalocean-deployment
       deploy_on_push: true
     
+    source_dir: /
     dockerfile_path: Dockerfile
     
     instance_count: 1
