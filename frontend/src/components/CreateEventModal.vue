@@ -102,13 +102,19 @@ const handleSubmit = async () => {
   loading.value = true
 
   try {
+    // Convert empty string or 0 to null for maxAttendees
+    const maxAttendeesValue = maxAttendees.value && maxAttendees.value > 0 ? maxAttendees.value : null
+    
     const eventData = {
       title: title.value,
       description: description.value,
       date: dateTime,
       location: location.value,
-      maxAttendees: maxAttendees.value,
+      maxAttendees: maxAttendeesValue,
     }
+
+    console.log('📝 CreateEventModal - Submitting event data:', eventData)
+    console.log('📊 maxAttendees raw value:', maxAttendees.value, 'processed:', maxAttendeesValue, 'type:', typeof maxAttendeesValue)
 
     if (isEditMode.value && props.eventToEdit) {
       // Update existing event
