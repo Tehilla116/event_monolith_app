@@ -18,6 +18,15 @@ interface Props {
 
 const props = defineProps<Props>()
 
+// Debug: Log event data to see if maxAttendees is present
+console.log('EventCard - Event data:', {
+  id: props.event.id,
+  title: props.event.title,
+  maxAttendees: props.event.maxAttendees,
+  hasMaxAttendees: 'maxAttendees' in props.event,
+  fullEvent: props.event
+})
+
 // Stores
 const authStore = useAuthStore()
 const eventsStore = useEventsStore()
