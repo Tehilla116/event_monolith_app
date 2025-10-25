@@ -18,15 +18,6 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// Debug: Log event data to see if maxAttendees is present
-console.log('EventCard - Event data:', {
-  id: props.event.id,
-  title: props.event.title,
-  maxAttendees: props.event.maxAttendees,
-  hasMaxAttendees: 'maxAttendees' in props.event,
-  fullEvent: props.event
-})
-
 // Stores
 const authStore = useAuthStore()
 const eventsStore = useEventsStore()
@@ -208,15 +199,16 @@ const handleCardClick = () => {
       </div>
 
       <!-- Capacity Information -->
-      <div v-if="event.maxAttendees" class="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+      <div class="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
         <div class="flex items-center justify-between mb-2">
           <span class="text-sm text-gray-600 dark:text-gray-400">Event Capacity</span>
           <span class="text-sm font-semibold" :class="capacityClass">
-            <span v-if="isEventFull" class="text-red-600 dark:text-red-400">FULL</span>
+            <span v-if="!event.maxAttendees" class="text-blue-600 dark:text-blue-400">Unlimited</span>
+            <span v-else-if="isEventFull" class="text-red-600 dark:text-red-400">FULL</span>
             <span v-else>{{ remainingSpots }} {{ remainingSpots === 1 ? 'spot' : 'spots' }} left</span>
           </span>
         </div>
-        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+        <div v-if="event.maxAttendees" class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
           <div 
             class="h-full rounded-full transition-all duration-300"
             :class="{
@@ -229,7 +221,7 @@ const handleCardClick = () => {
           ></div>
         </div>
         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          {{ rsvpCounts.going }} / {{ event.maxAttendees }} attendees
+          {{ rsvpCounts.going }} {{ event.maxAttendees ? `/ ${event.maxAttendees}` : '' }} attendees
         </div>
       </div>
 
