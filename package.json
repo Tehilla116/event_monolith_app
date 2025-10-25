@@ -28,6 +28,7 @@
     "bcryptjs": "^2.4.3",
     "elysia": "^1.1.23",
     "jsonwebtoken": "^9.0.2",
+    "memoirist": "^0.4.0",
     "nodemailer": "^6.9.16",
     "tsx": "^4.7.0"
   },
