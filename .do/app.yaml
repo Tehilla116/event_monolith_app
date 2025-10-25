@@ -9,10 +9,7 @@ services:
       branch: digitalocean-deployment
       deploy_on_push: true
     
-    source_dir: /
-    
-    build_command: npm install && npx prisma generate
-    run_command: npm start
+    dockerfile_path: Dockerfile
     
     instance_count: 1
     instance_size_slug: basic-xxs
