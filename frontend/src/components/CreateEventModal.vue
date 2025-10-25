@@ -113,9 +113,6 @@ const handleSubmit = async () => {
       maxAttendees: maxAttendeesValue,
     }
 
-    console.log('📝 CreateEventModal - Submitting event data:', eventData)
-    console.log('📊 maxAttendees raw value:', maxAttendees.value, 'processed:', maxAttendeesValue, 'type:', typeof maxAttendeesValue)
-
     if (isEditMode.value && props.eventToEdit) {
       // Update existing event
       await eventsStore.updateEvent(props.eventToEdit.id, eventData)
