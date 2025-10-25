@@ -116,10 +116,6 @@ export const useEventsStore = defineStore('events', () => {
     loading.value = true
     error.value = null
 
-    console.log('🔄 Updating event:', eventId)
-    console.log('📦 Event data being sent:', eventData)
-    console.log('📊 maxAttendees in payload:', eventData.maxAttendees, 'Type:', typeof eventData.maxAttendees)
-
     try {
       const response = await api.put(`/events/${eventId}`, eventData)
       const updatedEvent = response.data.event
@@ -129,7 +125,6 @@ export const useEventsStore = defineStore('events', () => {
       if (index !== -1) {
         // Use splice to ensure Vue reactivity is triggered
         events.value.splice(index, 1, updatedEvent)
-        console.log('✅ Event updated locally:', updatedEvent.title)
       }
 
       return updatedEvent

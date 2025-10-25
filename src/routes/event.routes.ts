@@ -294,9 +294,6 @@ export const eventRoutes = new Elysia({ prefix: "/events" })
         if (body.location) updateData.location = body.location;
         if (body.maxAttendees !== undefined) updateData.maxAttendees = body.maxAttendees;
 
-        console.log("📦 Update data being sent to controller:", updateData);
-        console.log("📊 Body maxAttendees:", body.maxAttendees, "Type:", typeof body.maxAttendees);
-
         // Update event
         const result = await updateEvent(
           params.id,
@@ -333,6 +330,10 @@ export const eventRoutes = new Elysia({ prefix: "/events" })
         description: t.Optional(t.String({ minLength: 10 })),
         date: t.Optional(t.String()),
         location: t.Optional(t.String({ minLength: 3 })),
+        maxAttendees: t.Optional(t.Nullable(t.Number({
+          minimum: 1,
+          error: "Maximum attendees must be at least 1 if specified",
+        }))),
       }),
       detail: {
         tags: ["Events"],
