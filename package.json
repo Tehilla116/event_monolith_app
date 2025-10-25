@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
+    "start:node": "tsx src/index.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
@@ -27,7 +28,8 @@
     "bcryptjs": "^2.4.3",
     "elysia": "^1.1.23",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^6.9.16"
+    "nodemailer": "^6.9.16",
+    "tsx": "^4.7.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

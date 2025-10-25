@@ -11,8 +11,8 @@ services:
     
     source_dir: /
     
-    build_command: curl -fsSL https://bun.sh/install | bash && export PATH="$HOME/.bun/bin:$PATH" && bun install
-    run_command: export PATH="$HOME/.bun/bin:$PATH" && bun src/index.ts
+    build_command: npm install && npx prisma generate
+    run_command: npm run start:node
     
     instance_count: 1
     instance_size_slug: basic-xxs
