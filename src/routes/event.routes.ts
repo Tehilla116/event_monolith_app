@@ -294,6 +294,9 @@ export const eventRoutes = new Elysia({ prefix: "/events" })
         if (body.location) updateData.location = body.location;
         if (body.maxAttendees !== undefined) updateData.maxAttendees = body.maxAttendees;
 
+        console.log("📦 Update data being sent to controller:", updateData);
+        console.log("📊 Body maxAttendees:", body.maxAttendees, "Type:", typeof body.maxAttendees);
+
         // Update event
         const result = await updateEvent(
           params.id,

@@ -161,6 +161,8 @@ export async function updateEvent(
   }
 ) {
   try {
+    console.log("🔄 updateEvent called with:", { eventId, userId, userRole, eventData });
+    
     // Find the event first
     const event = await prisma.event.findUnique({
       where: { id: eventId },
@@ -173,6 +175,9 @@ export async function updateEvent(
         status: 404,
       };
     }
+
+    console.log("📋 Current event maxAttendees:", event.maxAttendees);
+    console.log("📝 New maxAttendees:", eventData.maxAttendees);
 
     // Check if user is the organizer or an ADMIN
     if (event.organizerId !== userId && userRole !== "ADMIN") {
