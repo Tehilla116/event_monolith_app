@@ -4,6 +4,7 @@ import { Plus } from 'lucide-vue-next'
 import { useAuthStore } from '../stores/auth'
 import { useEventsStore } from '../stores/events'
 import EventCard from '../components/EventCard.vue'
+import EventCardSkeleton from '../components/EventCardSkeleton.vue'
 import CreateEventModal from '../components/CreateEventModal.vue'
 import AdminActionsModal from '../components/AdminActionsModal.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
@@ -225,10 +226,9 @@ const handleReject = async (eventId: string) => {
       </button>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="eventsStore.loading && eventsStore.events.length === 0" class="text-center py-12">
-      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      <p class="mt-4 text-gray-500 dark:text-gray-400">Loading events...</p>
+    <!-- Loading State with Skeletons -->
+    <div v-if="eventsStore.loading && eventsStore.events.length === 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <EventCardSkeleton v-for="n in 6" :key="n" />
     </div>
 
     <!-- Error State -->
