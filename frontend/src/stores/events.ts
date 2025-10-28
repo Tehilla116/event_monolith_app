@@ -221,77 +221,73 @@ export const useEventsStore = defineStore('events', () => {
    * Connect to WebSocket for real-time updates
    */
   function connectWebSocket() {
-    // Check if we've exceeded max retries
-    if (wsRetryCount.value >= wsMaxRetries.value) {
-      console.warn('⚠️ WebSocket max retries reached. Real-time updates disabled.')
-      console.info('💡 App will work normally, but changes require manual refresh.')
-      return
-    }
-
     // Close existing connection if any
     if (ws.value) {
-      ws.value.close()
+      try { ws.value.close(); } catch (e) {}
     }
 
-    try {
-      // Use production WebSocket URL or localhost
-      const wsUrl = import.meta.env.VITE_API_URL 
-        ? import.meta.env.VITE_API_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/ws'
-        : 'ws://localhost:8080/ws'
-      
-      console.log('🔌 Connecting to WebSocket:', wsUrl)
-      ws.value = new WebSocket(wsUrl)
-
-      ws.value.onopen = () => {
-        console.log('✅ WebSocket connected - Real-time updates enabled')
-        wsRetryCount.value = 0 // Reset retry count on successful connection
-      }
-
-      ws.value.onmessage = (event) => {
-        try {
-          const message = JSON.parse(event.data)
-          handleWebSocketMessage(message)
-        } catch (err) {
-          console.error('Error parsing WebSocket message:', err)
-        }
-      }
-
-      ws.value.onerror = (error) => {
-        console.error('❌ WebSocket connection failed')
-        // Only log detailed error in development
-        if (import.meta.env.DEV) {
-          console.error('WebSocket error details:', error)
-        }
-      }
-
-      ws.value.onclose = () => {
-        console.log('🔌 WebSocket disconnected')
-        
-        // Clear any existing retry timeout
-        if (wsRetryTimeout.value) {
-          clearTimeout(wsRetryTimeout.value)
-        }
-
-        // Only retry if we haven't exceeded max retries
-        if (wsRetryCount.value < wsMaxRetries.value) {
-          wsRetryCount.value++
-          // Exponential backoff: 2s, 4s, 8s
-          const retryDelay = Math.min(2000 * Math.pow(2, wsRetryCount.value - 1), 10000)
-          
-          console.log(`🔄 Will retry WebSocket connection in ${retryDelay / 1000}s (attempt ${wsRetryCount.value}/${wsMaxRetries.value})`)
-          
-          wsRetryTimeout.value = window.setTimeout(() => {
-            connectWebSocket()
-          }, retryDelay)
+    // Inner connect function (used for reconnection)
+    function connect() {
+      try {
+        // Build dynamic WebSocket URL based on current location (use VITE_API_URL if provided)
+        let wsUrl: string
+        if (import.meta.env.VITE_API_URL) {
+          wsUrl = import.meta.env.VITE_API_URL.replace(/^https:\/\//, 'wss://').replace(/^http:\/\//, 'ws://') + '/ws'
+        } else if (typeof window !== 'undefined') {
+          const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+          wsUrl = `${proto}//${window.location.host}/ws`
         } else {
-          console.warn('⚠️ WebSocket unavailable - Running in offline mode')
-          console.info('💡 App fully functional, but real-time updates are disabled')
+          wsUrl = 'ws://localhost:3000/ws'
         }
+
+        console.log('🔌 Connecting to WebSocket:', wsUrl)
+        ws.value = new WebSocket(wsUrl)
+
+        ws.value.onopen = () => {
+          console.log('✅ WebSocket connected - Real-time updates enabled')
+          wsRetryCount.value = 0 // reset retry count on success
+        }
+
+        ws.value.onmessage = (event) => {
+          try {
+            const message = JSON.parse(event.data)
+
+            // Respond to server-level PINGs to keep connection alive
+            if (message?.type === 'PING') {
+              try { ws.value?.send(JSON.stringify({ type: 'PONG' })); } catch (e) {}
+              return
+            }
+
+            // Ignore PONG messages
+            if (message?.type === 'PONG') {
+              return
+            }
+
+            handleWebSocketMessage(message)
+          } catch (err) {
+            console.error('Error parsing WebSocket message:', err)
+          }
+        }
+
+        ws.value.onerror = (error) => {
+          console.error('❌ WebSocket connection error')
+          if (import.meta.env.DEV) console.error('WebSocket error details:', error)
+        }
+
+        ws.value.onclose = () => {
+          console.warn('Socket closed. Reconnecting in 1 second...')
+          // Attempt to reconnect after 1 second
+          setTimeout(connect, 1000)
+        }
+      } catch (err) {
+        console.error('Error connecting to WebSocket:', err)
+        // Retry after 1s on failure
+        setTimeout(connect, 1000)
       }
-    } catch (err) {
-      console.error('Error connecting to WebSocket:', err)
-      wsRetryCount.value++
     }
+
+    // Start initial connection
+    connect()
   }
 
   /**
