@@ -16,7 +16,6 @@ export const useEventsStore = defineStore('events', () => {
   const error = ref<string | null>(null)
   const ws = ref<WebSocket | null>(null)
   const wsRetryCount = ref(0)
-  const wsMaxRetries = ref(10) // Only retry 10 times
   const wsRetryTimeout = ref<number | null>(null)
 
   // Getters
