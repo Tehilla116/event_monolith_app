@@ -156,8 +156,7 @@ const app = new Elysia()
       }
     },
   })
-  })
-
+ 
 // Start server in a safe start function so we can handle EADDRINUSE and other errors
 async function startServer() {
   const host = process.env.HOST || '0.0.0.0';
