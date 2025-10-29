@@ -173,4 +173,24 @@ const proto = process.env.NODE_ENV === 'production' ? 'wss' : 'ws';
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
 console.log(`🔌 WebSocket available at ${proto}://${app.server?.hostname}:${app.server?.port}/ws`);
 
+// Debug: log HTTP upgrade requests (helps diagnose WebSocket handshake failures in production)
+try {
+  const server = app.server as any
+  if (server && typeof server.on === 'function') {
+    server.on('upgrade', (req: any, socket: any, head: any) => {
+      try {
+        console.log('🔄 HTTP Upgrade request:', req.url, {
+          headers: req.headers,
+          method: req.method,
+          remoteAddress: req.socket?.remoteAddress,
+        })
+      } catch (err) {
+        console.warn('Failed to log upgrade request', err)
+      }
+    })
+  }
+} catch (e) {
+  // ignore if server doesn't expose upgrade
+}
+
 export default app;
