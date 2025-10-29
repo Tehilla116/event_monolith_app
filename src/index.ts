@@ -159,11 +159,10 @@ const app = new Elysia()
  
 // Start server in a safe start function so we can handle EADDRINUSE and other errors
 async function startServer() {
-  const host = process.env.HOST || '0.0.0.0';
   const port = Number(process.env.PORT) || 3000;
 
   try {
-    await app.listen({ hostname: host, port });
+    await app.listen({ hostname: "localhost", port });
 
     // Pass the app server instance to websocket service for publishing
     setServerInstance(app.server);

@@ -28,5 +28,8 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# Prisma
-prisma/migrations/
+# Database
+dev.db
+
+# Frontend build
+frontend/dist/
