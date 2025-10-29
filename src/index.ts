@@ -48,6 +48,20 @@ const app = new Elysia()
   .get("/", () => "Hello Elysia")
   .use(authRoutes)
   .use(eventRoutes)
+  // Health check endpoint for diagnostics
+  .get('/health', ({ set }) => {
+    const info = {
+      pid: process.pid,
+      portEnv: process.env.PORT || null,
+      hostEnv: process.env.HOST || null,
+      nodeEnv: process.env.NODE_ENV || null,
+      uptimeSeconds: process.uptime(),
+      serverHostname: app.server?.hostname || null,
+      serverPort: app.server?.port || null,
+    }
+    set.status = 200
+    return info
+  })
   // WebSocket handler
   .ws("/ws", {
     open(ws) {
@@ -167,6 +181,9 @@ async function startServer() {
     // Pass the app server instance to websocket service for publishing
     setServerInstance(app.server);
 
+  // Log process and environment info for diagnostics
+  console.log(`PID: ${process.pid} | PORT env: ${process.env.PORT || 'unset'} | HOST env: ${process.env.HOST || 'unset'} | NODE_ENV: ${process.env.NODE_ENV || 'unset'}`);
+
     // Start heartbeat to keep connections alive and cleanup dead sockets
     try {
       startHeartbeat(30000); // 30s interval
@@ -215,24 +232,66 @@ if (require.main === module) {
   startServer();
 }
 
-// Debug: log HTTP upgrade requests (helps diagnose WebSocket handshake failures in production)
-try {
-  const server = app.server as any
-  if (server && typeof server.on === 'function') {
-    server.on('upgrade', (req: any, socket: any, head: any) => {
-      try {
-        console.log('🔄 HTTP Upgrade request:', req.url, {
-          headers: req.headers,
-          method: req.method,
-          remoteAddress: req.socket?.remoteAddress,
-        })
-      } catch (err) {
-        console.warn('Failed to log upgrade request', err)
-      }
-    })
-  }
-} catch (e) {
-  // ignore if server doesn't expose upgrade
-}
+    // Helper sleep
+    const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
-export default app;
+    const maxAttempts = 6;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await app.listen({ hostname: host, port });
+
+        // Pass the app server instance to websocket service for publishing
+        setServerInstance(app.server);
+
+        // Start heartbeat to keep connections alive and cleanup dead sockets
+        try {
+          startHeartbeat(30000); // 30s interval
+        } catch (e) {
+          console.warn('Could not start websocket heartbeat:', e);
+        }
+
+        const proto = process.env.NODE_ENV === 'production' ? 'wss' : 'ws';
+        console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
+        console.log(`🔌 WebSocket available at ${proto}://${app.server?.hostname}:${app.server?.port}/ws`);
+
+        // Debug: log HTTP upgrade requests (helps diagnose WebSocket handshake failures in production)
+        try {
+          const server = app.server as any
+          if (server && typeof server.on === 'function') {
+            server.on('upgrade', (req: any, socket: any, head: any) => {
+              try {
+                console.log('🔄 HTTP Upgrade request:', req.url, {
+                  headers: req.headers,
+                  method: req.method,
+                  remoteAddress: req.socket?.remoteAddress,
+                })
+              } catch (err) {
+                console.warn('Failed to log upgrade request', err)
+              }
+            })
+          }
+        } catch (e) {
+          // ignore if server doesn't expose upgrade
+        }
+
+        // Log process and environment info for diagnostics
+        console.log(`PID: ${process.pid} | PORT env: ${process.env.PORT || 'unset'} | HOST env: ${process.env.HOST || 'unset'} | NODE_ENV: ${process.env.NODE_ENV || 'unset'}`);
+
+        // Success - break out of retry loop
+        return;
+      } catch (err: any) {
+        if (err && err.code === 'EADDRINUSE') {
+          const delay = 200 * Math.pow(2, attempt - 1); // exponential backoff starting at 200ms
+          console.warn(`Attempt ${attempt}/${maxAttempts}: Port ${port} in use; retrying in ${delay}ms...`);
+          if (attempt === maxAttempts) {
+            console.error(`Port ${port} is still in use after ${maxAttempts} attempts. Exiting.`);
+            process.exit(1);
+          }
+          await sleep(delay);
+          continue;
+        }
+
+        console.error('Failed to start server:', err);
+        process.exit(1);
+      }
+    }
