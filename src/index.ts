@@ -48,6 +48,20 @@ const app = new Elysia()
   .get("/", () => "Hello Elysia")
   .use(authRoutes)
   .use(eventRoutes)
+  // Health check endpoint for diagnostics
+  .get('/health', ({ set }) => {
+    const info = {
+      pid: process.pid,
+      portEnv: process.env.PORT || null,
+      hostEnv: process.env.HOST || null,
+      nodeEnv: process.env.NODE_ENV || null,
+      uptimeSeconds: process.uptime(),
+      serverHostname: app.server?.hostname || null,
+      serverPort: app.server?.port || null,
+    }
+    set.status = 200
+    return info
+  })
   // WebSocket handler
   .ws("/ws", {
     open(ws) {
@@ -167,6 +181,9 @@ async function startServer() {
 
     // Pass the app server instance to websocket service for publishing
     setServerInstance(app.server);
+
+  // Log process and environment info for diagnostics
+  console.log(`PID: ${process.pid} | PORT env: ${process.env.PORT || 'unset'} | HOST env: ${process.env.HOST || 'unset'} | NODE_ENV: ${process.env.NODE_ENV || 'unset'}`);
 
     // Start heartbeat to keep connections alive and cleanup dead sockets
     try {
