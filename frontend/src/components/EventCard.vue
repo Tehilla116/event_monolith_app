@@ -168,14 +168,14 @@ const handleCardClick = () => {
       <!-- Event Details -->
       <div class="space-y-2 mb-4">
         <!-- Date -->
-        <div class="flex items-start text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-          <Calendar class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+        <div class="flex items-center text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+          <Calendar class="w-4 h-4 mr-2 flex-shrink-0" />
           <span class="break-words">{{ formattedDate }}</span>
         </div>
 
         <!-- Location -->
-        <div class="flex items-start text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-          <MapPin class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+        <div class="flex items-center text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+          <MapPin class="w-4 h-4 mr-2 flex-shrink-0" />
           <span class="break-words">{{ event.location }}</span>
         </div>
 
@@ -249,7 +249,7 @@ const handleCardClick = () => {
         <button
           @click="handleRsvp('GOING')"
           :disabled="loading || (isEventFull && userRsvp?.status !== 'GOING')"
-          class="flex-1 btn btn-success text-xs sm:text-sm py-2 disabled:opacity-50 disabled:cursor-not-allowed justify-center"
+          class="flex-1 btn btn-success text-xs sm:text-sm py-2 disabled:opacity-50 disabled:cursor-not-allowed items-center justify-center"
           :class="{ 'ring-2 ring-green-500': userRsvp?.status === 'GOING' }"
           :title="isEventFull && userRsvp?.status !== 'GOING' ? 'Event is full' : ''"
         >
@@ -259,7 +259,7 @@ const handleCardClick = () => {
         <button
           @click="handleRsvp('MAYBE')"
           :disabled="loading"
-          class="flex-1 btn bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-400 text-xs sm:text-sm py-2 disabled:opacity-50 justify-center"
+          class="flex-1 btn bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-400 text-xs sm:text-sm py-2 disabled:opacity-50 items-center justify-center"
           :class="{ 'ring-2 ring-yellow-500': userRsvp?.status === 'MAYBE' }"
         >
           <HelpCircle class="w-4 h-4 mr-1" />
@@ -268,7 +268,7 @@ const handleCardClick = () => {
         <button
           @click="handleRsvp('NOT_GOING')"
           :disabled="loading"
-          class="flex-1 btn bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-400 text-xs sm:text-sm py-2 disabled:opacity-50 justify-center"
+          class="flex-1 btn bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-400 text-xs sm:text-sm py-2 disabled:opacity-50 items-center justify-center"
           :class="{ 'ring-2 ring-gray-500': userRsvp?.status === 'NOT_GOING' }"
         >
           <XCircle class="w-4 h-4 mr-1" />
@@ -281,7 +281,7 @@ const handleCardClick = () => {
         <button
           @click="handleEdit"
           :disabled="loading"
-          class="flex-1 btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 text-xs sm:text-sm py-2 disabled:opacity-50 justify-center"
+          class="flex-1 btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 text-xs sm:text-sm py-2 disabled:opacity-50 items-center justify-center"
         >
           <Pencil class="w-4 h-4 mr-1" />
           Edit
@@ -289,7 +289,7 @@ const handleCardClick = () => {
         <button
           @click="handleDelete"
           :disabled="loading"
-          class="flex-1 btn btn-danger text-xs sm:text-sm py-2 disabled:opacity-50 justify-center"
+          class="flex-1 btn btn-danger text-xs sm:text-sm py-2 disabled:opacity-50 items-center justify-center"
         >
           <Trash2 class="w-4 h-4 mr-1" />
           Delete
@@ -301,7 +301,7 @@ const handleCardClick = () => {
         <button
           @click.stop="handleCardClick"
           :disabled="loading"
-          class="w-full btn bg-purple-600 text-white hover:bg-purple-700 focus:ring-purple-500 text-xs sm:text-sm py-2 disabled:opacity-50 justify-center"
+          class="w-full btn bg-purple-600 text-white hover:bg-purple-700 focus:ring-purple-500 text-xs sm:text-sm py-2 disabled:opacity-50 items-center justify-center"
         >
           <Settings class="w-4 h-4 mr-1" />
           Manage Event

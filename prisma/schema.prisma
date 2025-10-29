@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 enum UserRole {
@@ -37,7 +37,7 @@ model Event {
   date         DateTime
   location     String
   organizerId  String
-  approved     Boolean   @default(false)
+  approved     Boolean   @default(true)
   maxAttendees Int?      // Maximum number of attendees (null = unlimited)
   createdAt    DateTime  @default(now())
 

@@ -136,7 +136,7 @@ const toggleAttendees = () => {
               <!-- Event Info Grid -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
                 <!-- Date -->
-                <div class="flex items-start gap-3">
+                <div class="flex items-center gap-3">
                   <div class="p-2 bg-primary-100 dark:bg-primary-900 rounded-lg">
                     <Calendar class="w-5 h-5 text-primary-600 dark:text-primary-400" />
                   </div>
@@ -147,7 +147,7 @@ const toggleAttendees = () => {
                 </div>
 
                 <!-- Location -->
-                <div class="flex items-start gap-3">
+                <div class="flex items-center gap-3">
                   <div class="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
                     <MapPin class="w-5 h-5 text-green-600 dark:text-green-400" />
                   </div>
@@ -158,7 +158,7 @@ const toggleAttendees = () => {
                 </div>
 
                 <!-- Organizer -->
-                <div class="flex items-start gap-3">
+                <div class="flex items-center gap-3">
                   <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
                     <User class="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
@@ -169,7 +169,7 @@ const toggleAttendees = () => {
                 </div>
 
                 <!-- RSVPs -->
-                <div class="flex items-start gap-3">
+                <div class="flex items-center gap-3">
                   <div class="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
                     <UserCheck class="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
@@ -345,7 +345,7 @@ const toggleAttendees = () => {
                 <button
                   @click="handleApprove"
                   :disabled="loading"
-                  class="flex-1 btn bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="flex-1 btn bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
                 >
                   <CheckCircle class="w-4 h-4 mr-2" />
                   Approve Event
@@ -353,7 +353,7 @@ const toggleAttendees = () => {
                 <button
                   @click="handleReject"
                   :disabled="loading"
-                  class="flex-1 btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="flex-1 btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
                 >
                   <XCircle class="w-4 h-4 mr-2" />
                   Reject Event
@@ -365,7 +365,7 @@ const toggleAttendees = () => {
                 <button
                   @click="handleEdit"
                   :disabled="loading"
-                  class="flex-1 btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="flex-1 btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
                 >
                   <Pencil class="w-4 h-4 mr-2" />
                   Edit Event
@@ -373,7 +373,7 @@ const toggleAttendees = () => {
                 <button
                   @click="handleDelete"
                   :disabled="loading"
-                  class="flex-1 btn btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="flex-1 btn btn-danger disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
                 >
                   <Trash2 class="w-4 h-4 mr-2" />
                   Delete Event
@@ -381,7 +381,7 @@ const toggleAttendees = () => {
                 <button
                   @click="handleClose"
                   :disabled="loading"
-                  class="btn bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
+                  class="btn bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 inline-flex items-center justify-center"
                 >
                   Cancel
                 </button>
