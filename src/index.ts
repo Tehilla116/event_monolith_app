@@ -156,22 +156,66 @@ const app = new Elysia()
       }
     },
   })
-  // Use host/port from environment when available (Render provides PORT)
-  .listen({ hostname: process.env.HOST || '0.0.0.0', port: Number(process.env.PORT) || 3000 });
+  })
 
-// Pass the app server instance to websocket service for publishing
-setServerInstance(app.server);
+// Start server in a safe start function so we can handle EADDRINUSE and other errors
+async function startServer() {
+  const host = process.env.HOST || '0.0.0.0';
+  const port = Number(process.env.PORT) || 3000;
 
-// Start heartbeat to keep connections alive and cleanup dead sockets
-try {
-  startHeartbeat(30000); // 30s interval
-} catch (e) {
-  console.warn('Could not start websocket heartbeat:', e);
+  try {
+    await app.listen({ hostname: host, port });
+
+    // Pass the app server instance to websocket service for publishing
+    setServerInstance(app.server);
+
+    // Start heartbeat to keep connections alive and cleanup dead sockets
+    try {
+      startHeartbeat(30000); // 30s interval
+    } catch (e) {
+      console.warn('Could not start websocket heartbeat:', e);
+    }
+
+    const proto = process.env.NODE_ENV === 'production' ? 'wss' : 'ws';
+    console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
+    console.log(`🔌 WebSocket available at ${proto}://${app.server?.hostname}:${app.server?.port}/ws`);
+
+    // Debug: log HTTP upgrade requests (helps diagnose WebSocket handshake failures in production)
+    try {
+      const server = app.server as any
+      if (server && typeof server.on === 'function') {
+        server.on('upgrade', (req: any, socket: any, head: any) => {
+          try {
+            console.log('🔄 HTTP Upgrade request:', req.url, {
+              headers: req.headers,
+              method: req.method,
+              remoteAddress: req.socket?.remoteAddress,
+            })
+          } catch (err) {
+            console.warn('Failed to log upgrade request', err)
+          }
+        })
+      }
+    } catch (e) {
+      // ignore if server doesn't expose upgrade
+    }
+
+  } catch (err: any) {
+    if (err && err.code === 'EADDRINUSE') {
+      console.error(`Port ${port} is already in use. Make sure no other process is binding to this port.`);
+      console.error('If you are deploying to Render, ensure only one service is listening on the assigned PORT.');
+      process.exit(1);
+    }
+
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
 }
 
-const proto = process.env.NODE_ENV === 'production' ? 'wss' : 'ws';
-console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
-console.log(`🔌 WebSocket available at ${proto}://${app.server?.hostname}:${app.server?.port}/ws`);
+// Only start server when this file is executed directly (not when imported)
+if (require.main === module) {
+  startServer();
+}
 
 // Debug: log HTTP upgrade requests (helps diagnose WebSocket handshake failures in production)
 try {
