@@ -3,7 +3,7 @@ import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
 import { authRoutes } from "./routes/auth.routes";
 import { eventRoutes } from "./routes/event.routes";
-import { setServerInstance } from "./services/websocket.service";
+import { setServerInstance, startHeartbeat, addConnection, removeConnection } from "./services/websocket.service";
 
 const app = new Elysia()
   .onError(({ code, error, set }) => {
@@ -52,11 +52,17 @@ const app = new Elysia()
   .ws("/ws", {
     open(ws) {
       console.log("🔌 WebSocket client connected");
-      
+
+      // Register connection with the websocket service (for heartbeat & fallback broadcasting)
+      try { addConnection(ws); } catch (e) { /* ignore */ }
+
       // Subscribe to topics
       ws.subscribe("events");
       ws.subscribe("rsvps");
-      
+
+      // Mark alive (in case the implementation exposes it)
+      try { ws._isAlive = true; } catch (e) {}
+
       // Send welcome message
       ws.send(
         JSON.stringify({
@@ -68,14 +74,56 @@ const app = new Elysia()
           },
         })
       );
+
+      // Start per-connection heartbeat ping (store interval on ws.data to clear later)
+      try {
+        const interval = setInterval(() => {
+          try {
+            if (typeof ws.ping === 'function') {
+              ws.ping();
+            } else {
+              // fallback to message-level ping
+              ws.send(JSON.stringify({ type: 'PING' }));
+            }
+          } catch (e) {
+            // ignore send/ping errors
+          }
+        }, 30000);
+
+        if (!ws.data) ws.data = {};
+        ws.data.heartbeatInterval = interval;
+      } catch (e) {
+        // ignore heartbeat setup errors
+      }
     },
     message(ws, message: any) {
+      // lightweight parse and respond to ping/pong to keep connection alive
+      let parsed: any = null;
+      try {
+        parsed = typeof message === "string" ? JSON.parse(message) : JSON.parse(message.toString());
+      } catch (err) {
+        // not a JSON message - ignore for heartbeat handling
+      }
+
+      // If client responded to our ping
+      if (parsed && parsed.type === 'PONG') {
+        try { ws._isAlive = true; } catch (e) {}
+        return;
+      }
+
+      // If client sent a ping, reply with PONG
+      if (parsed && parsed.type === 'PING') {
+        try { ws.send(JSON.stringify({ type: 'PONG' })); } catch (e) {}
+        try { ws._isAlive = true; } catch (e) {}
+        return;
+      }
+
       console.log("📨 WebSocket message received:", message);
-      
+
       // Handle client messages (optional)
       try {
-        const data = typeof message === "string" ? JSON.parse(message) : JSON.parse(message.toString());
-        
+        const data = parsed || (typeof message === "string" ? JSON.parse(message) : JSON.parse(message.toString()));
+
         // Echo back for testing
         ws.send(
           JSON.stringify({
@@ -92,20 +140,37 @@ const app = new Elysia()
     },
     close(ws) {
       console.log("🔌 WebSocket client disconnected");
-      
+
       // Unsubscribe from topics
-      ws.unsubscribe("events");
-      ws.unsubscribe("rsvps");
+      try { ws.unsubscribe("events"); } catch (e) {}
+      try { ws.unsubscribe("rsvps"); } catch (e) {}
+
+      try { removeConnection(ws); } catch (e) {}
+
+      // Clear per-connection heartbeat interval to avoid leaks
+      try {
+        const interval = ws.data?.heartbeatInterval;
+        if (interval) clearInterval(interval);
+      } catch (e) {
+        // ignore
+      }
     },
   })
-  .listen(8080);
+  // Use host/port from environment when available (Render provides PORT)
+  .listen({ hostname: process.env.HOST || '0.0.0.0', port: Number(process.env.PORT) || 3000 });
 
 // Pass the app server instance to websocket service for publishing
 setServerInstance(app.server);
 
-console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-);
-console.log(`🔌 WebSocket available at ws://${app.server?.hostname}:${app.server?.port}/ws`);
+// Start heartbeat to keep connections alive and cleanup dead sockets
+try {
+  startHeartbeat(30000); // 30s interval
+} catch (e) {
+  console.warn('Could not start websocket heartbeat:', e);
+}
+
+const proto = process.env.NODE_ENV === 'production' ? 'wss' : 'ws';
+console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
+console.log(`🔌 WebSocket available at ${proto}://${app.server?.hostname}:${app.server?.port}/ws`);
 
 export default app;

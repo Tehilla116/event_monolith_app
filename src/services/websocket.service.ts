@@ -17,6 +17,7 @@ export function setServerInstance(server: any) {
 
 // Store active WebSocket connections (fallback)
 const connections = new Set<any>();
+let heartbeatIntervalId: any = null;
 
 /**
  * Interface for WebSocket message types
@@ -46,6 +47,23 @@ export interface RsvpUpdateMessage {
  * @param ws - WebSocket connection to add
  */
 export function addConnection(ws: any) {
+  // mark connection as alive for heartbeat checks
+  try {
+    ws._isAlive = true;
+    // If the ws implementation supports pong event, attach handler
+    if (typeof ws.on === 'function') {
+      try {
+        ws.on('pong', () => {
+          ws._isAlive = true;
+        });
+      } catch (e) {
+        // some ws wrappers may not support 'pong' - ignore
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+
   connections.add(ws);
   console.log(`✅ WebSocket connected. Total connections: ${connections.size}`);
 }
@@ -57,6 +75,59 @@ export function addConnection(ws: any) {
 export function removeConnection(ws: any) {
   connections.delete(ws);
   console.log(`❌ WebSocket disconnected. Total connections: ${connections.size}`);
+}
+
+/**
+ * Start heartbeat ping/pong to keep connections alive and cleanup dead sockets
+ * @param intervalMs - heartbeat interval in milliseconds
+ */
+export function startHeartbeat(intervalMs = 30000) {
+  // avoid multiple intervals
+  if (heartbeatIntervalId) return;
+
+  heartbeatIntervalId = setInterval(() => {
+    connections.forEach((ws) => {
+      try {
+        // If the connection has been marked dead, terminate it
+        if (ws._isAlive === false) {
+          try {
+            if (typeof ws.terminate === 'function') ws.terminate();
+            else if (typeof ws.close === 'function') ws.close();
+          } catch (err) {
+            // ignore errors on close
+          }
+          connections.delete(ws);
+          return;
+        }
+
+        // mark as not alive and send a ping
+        ws._isAlive = false;
+
+        // Prefer native ping if available
+        if (typeof ws.ping === 'function') {
+          try {
+            ws.ping();
+          } catch (err) {
+            // fallback to sending a ping message
+            try { ws.send(JSON.stringify({ type: 'PING' })); } catch (e) {}
+          }
+        } else {
+          // fallback ping message for implementations without ping
+          try { ws.send(JSON.stringify({ type: 'PING' })); } catch (e) {}
+        }
+      } catch (error) {
+        console.error('Heartbeat error for ws connection:', error);
+        connections.delete(ws);
+      }
+    });
+  }, intervalMs);
+}
+
+export function stopHeartbeat() {
+  if (heartbeatIntervalId) {
+    clearInterval(heartbeatIntervalId);
+    heartbeatIntervalId = null;
+  }
 }
 
 /**
