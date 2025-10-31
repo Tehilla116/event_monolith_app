@@ -5,7 +5,7 @@ import axios from 'axios'
  * Uses production URL when deployed, falls back to localhost in development
  */
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
   headers: {
     'Content-Type': 'application/json',
   },

@@ -8,7 +8,7 @@ A modern full-stack monolith event management application with real-time updates
 - **Framework**: Elysia.js with TypeScript
 - **Database**: Prisma ORM with PostgreSQL (Neon)
 - **Authentication**: JWT with role-based access control (ADMIN, ORGANIZER, ATTENDEE)
-- **Real-time**: WebSocket for live event updates
+- **Real-time**: WebSocket for live event updates ✅
 - **Email**: Nodemailer with multi-provider support (Ethereal, SendGrid, AWS SES, SMTP)
 - **API Docs**: @elysiajs/swagger
 
@@ -112,29 +112,46 @@ bun install
 Create a `.env` file in the root directory:
 
 ```env
-# Database
-DATABASE_URL="postgresql://user:password@host/database?sslmode=require"
+# Database - Get from Neon (https://neon.tech) or use local PostgreSQL
+DATABASE_URL="postgresql://username:password@hostname/database?sslmode=require"
 
 # JWT
-JWT_SECRET="your-secret-key-here"
+JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+JWT_EXPIRES_IN="7d"
 
-# Email Provider (ethereal | sendgrid | aws | smtp)
-EMAIL_PROVIDER=ethereal
+# Server
+PORT=3001
+NODE_ENV="development"
 
-# Optional: SendGrid
-SENDGRID_API_KEY=your-sendgrid-api-key
+# Email (Ethereal - will be auto-generated)
+EMAIL_HOST="smtp.ethereal.email"
+EMAIL_PORT=587
+EMAIL_USER=""
+EMAIL_PASS=""
+EMAIL_FROM="noreply@eventapp.com"
+```
 
-# Optional: AWS SES
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
+**Database Setup:**
+1. **Neon PostgreSQL** (Recommended):
+   - Go to [neon.tech](https://neon.tech) and create a free account
+   - Create a new project
+   - Copy the connection string and replace `DATABASE_URL` above
 
-# Optional: Custom SMTP
-SMTP_HOST=smtp.example.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-smtp-username
-SMTP_PASS=your-smtp-password
+2. **Local PostgreSQL** (Alternative):
+   ```bash
+   # Install PostgreSQL locally
+   # macOS: brew install postgresql
+   # Ubuntu: sudo apt install postgresql
+   # Then create database:
+   createdb event_app
+   DATABASE_URL="postgresql://username:password@localhost:5432/event_app"
+   ```
+
+Create a `.env` file in the `frontend/` directory:
+
+```env
+# Frontend Environment Variables
+VITE_API_URL=http://localhost:3001
 ```
 
 ### 3. Setup Database
@@ -153,8 +170,12 @@ bun run db:migrate
 ### 4. Create Admin User (Optional)
 
 ```bash
-bun run scripts/create-admin.ts
+bun scripts/create-admin.ts
 ```
+
+This creates an admin user with credentials:
+- **Email**: `admin@example.com`
+- **Password**: `admin123`
 
 ### 5. Run Development Servers
 
@@ -162,7 +183,7 @@ bun run scripts/create-admin.ts
 ```bash
 bun run dev
 ```
-Server runs at `http://localhost:8080`
+Server runs at `http://localhost:3001`
 
 **Frontend (Terminal 2):**
 ```bash
@@ -176,7 +197,7 @@ Frontend runs at `http://localhost:5173`
 ## 📚 API Documentation
 
 Once the backend is running, visit:
-- **Swagger UI**: `http://localhost:8080/swagger`
+- **Swagger UI**: `http://localhost:3001/swagger`
 - **Interactive API docs** with request/response examples
 
 ## 📜 Available Scripts
@@ -188,7 +209,7 @@ Once the backend is running, visit:
 - `bun run db:push` - Push schema changes to database
 - `bun run db:migrate` - Run database migrations
 - `bun run db:studio` - Open Prisma Studio
-- `bun run scripts/create-admin.ts` - Create admin user
+- `bun scripts/create-admin.ts` - Create admin user
 
 ### Frontend
 - `npm run dev` - Start Vite development server
@@ -622,34 +643,42 @@ export const useExampleStore = defineStore('example', () => {
 
 ```prisma
 model User {
-  id        String   @id @default(cuid())
-  name      String
+  id        String   @id @default(uuid())
   email     String   @unique
   password  String
-  role      Role     @default(ATTENDEE)
+  role      UserRole @default(ATTENDEE)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  organizedEvents Event[] @relation("EventOrganizer")
+  rsvps           RSVP[]
 }
 
 model Event {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  date        DateTime
-  location    String
-  organizerId String
-  approved    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(uuid())
+  title        String
+  description  String
+  date         DateTime
+  location     String
+  organizerId  String
+  approved     Boolean  @default(true)
+  maxAttendees Int?     // Maximum number of attendees (null = unlimited)
+  createdAt    DateTime @default(now())
+
+  organizer    User     @relation("EventOrganizer", fields: [organizerId], references: [id])
+  rsvps        RSVP[]
 }
 
 model RSVP {
-  id        String     @id @default(cuid())
+  id        String     @id @default(uuid())
   userId    String
   eventId   String
-  status    RSVPStatus @default(PENDING)
+  status    RSVPStatus
   createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id])
+  event     Event      @relation(fields: [eventId], references: [id])
+
+  @@unique([userId, eventId])
 }
 ```
 

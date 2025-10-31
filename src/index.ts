@@ -5,7 +5,7 @@ import { authRoutes } from "./routes/auth.routes";
 import { eventRoutes } from "./routes/event.routes";
 import { setServerInstance, startHeartbeat, addConnection, removeConnection } from "./services/websocket.service";
 
-const app = new Elysia()
+const app: any = new Elysia()
   .onError(({ code, error, set }) => {
     const errorMessage = error && typeof error === 'object' && 'message' in error 
       ? (error as Error).message 
@@ -49,7 +49,7 @@ const app = new Elysia()
   .use(authRoutes)
   .use(eventRoutes)
   // Health check endpoint for diagnostics
-  .get('/health', ({ set }) => {
+  .get('/health', ({ set }): { pid: number; portEnv: string | null; hostEnv: string | null; nodeEnv: string | null; uptimeSeconds: number; serverHostname: string | null; serverPort: number | null } => {
     const info = {
       pid: process.pid,
       portEnv: process.env.PORT || null,
@@ -75,7 +75,7 @@ const app = new Elysia()
       ws.subscribe("rsvps");
 
       // Mark alive (in case the implementation exposes it)
-      try { ws._isAlive = true; } catch (e) {}
+      try { (ws as any)._isAlive = true; } catch (e) {}
 
       // Send welcome message
       ws.send(
@@ -104,8 +104,8 @@ const app = new Elysia()
           }
         }, 30000);
 
-        if (!ws.data) ws.data = {};
-        ws.data.heartbeatInterval = interval;
+        if (!(ws as any).data) (ws as any).data = {};
+        (ws as any).data.heartbeatInterval = interval;
       } catch (e) {
         // ignore heartbeat setup errors
       }
@@ -121,14 +121,14 @@ const app = new Elysia()
 
       // If client responded to our ping
       if (parsed && parsed.type === 'PONG') {
-        try { ws._isAlive = true; } catch (e) {}
+        try { (ws as any)._isAlive = true; } catch (e) {}
         return;
       }
 
       // If client sent a ping, reply with PONG
       if (parsed && parsed.type === 'PING') {
         try { ws.send(JSON.stringify({ type: 'PONG' })); } catch (e) {}
-        try { ws._isAlive = true; } catch (e) {}
+        try { (ws as any)._isAlive = true; } catch (e) {}
         return;
       }
 
@@ -136,7 +136,7 @@ const app = new Elysia()
 
       // Handle client messages (optional)
       try {
-        const data = parsed || (typeof message === "string" ? JSON.parse(message) : JSON.parse(message.toString()));
+        const data = parsed || (typeof message === "string" ? JSON.parse(message) : message);
 
         // Echo back for testing
         ws.send(
@@ -163,7 +163,7 @@ const app = new Elysia()
 
       // Clear per-connection heartbeat interval to avoid leaks
       try {
-        const interval = ws.data?.heartbeatInterval;
+        const interval = (ws as any).data?.heartbeatInterval;
         if (interval) clearInterval(interval);
       } catch (e) {
         // ignore
@@ -200,7 +200,7 @@ async function startServer() {
       // Debug: log HTTP upgrade requests (helps diagnose WebSocket handshake failures in production)
       const server = app.server as any
       if (server && typeof server.on === 'function') {
-        server.on('upgrade', (req: any, socket: any, head: any) => {
+        server.on('upgrade', (req: any, _socket: any, _head: any) => {
           console.log('🔄 HTTP Upgrade request:', req.url, { headers: req.headers, method: req.method, remoteAddress: req.socket?.remoteAddress })
         })
       }

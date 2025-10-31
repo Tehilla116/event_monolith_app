@@ -153,7 +153,7 @@ User Action → Controller → Database → WebSocket Broadcast → All Connecte
 ### Method 3: Terminal + Browser
 **Terminal 1 - WebSocket Client:**
 ```bash
-wscat -c ws://localhost:8080/ws
+wscat -c ws://localhost:3001/ws
 ```
 
 **Terminal 2 - Create Event:**

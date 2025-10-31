@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import api from '../services/api'
 import type { Event, RsvpStatus } from '../types'
 import { useAuthStore } from './auth'
+import WebSocketService from '../services/websocket'
 
 /**
  * Events Store
@@ -14,9 +15,6 @@ export const useEventsStore = defineStore('events', () => {
   const events = ref<Event[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
-  const ws = ref<WebSocket | null>(null)
-  const wsRetryCount = ref(0)
-  const wsRetryTimeout = ref<number | null>(null)
 
   // Getters
   const approvedEvents = computed(() => 
@@ -220,73 +218,11 @@ export const useEventsStore = defineStore('events', () => {
    * Connect to WebSocket for real-time updates
    */
   function connectWebSocket() {
-    // Close existing connection if any
-    if (ws.value) {
-      try { ws.value.close(); } catch (e) {}
-    }
+    // Register message handler for WebSocket updates
+    WebSocketService.addMessageHandler(handleWebSocketMessage)
 
-    // Inner connect function (used for reconnection)
-    function connect() {
-      try {
-        // Build dynamic WebSocket URL based on current location (use VITE_API_URL if provided)
-        let wsUrl: string
-        if (import.meta.env.VITE_API_URL) {
-          wsUrl = import.meta.env.VITE_API_URL.replace(/^https:\/\//, 'wss://').replace(/^http:\/\//, 'ws://') + '/ws'
-        } else if (typeof window !== 'undefined') {
-          const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-          wsUrl = `${proto}//${window.location.host}/ws`
-        } else {
-          wsUrl = 'ws://localhost:3000/ws'
-        }
-
-        console.log('🔌 Connecting to WebSocket:', wsUrl)
-        ws.value = new WebSocket(wsUrl)
-
-        ws.value.onopen = () => {
-          console.log('✅ WebSocket connected - Real-time updates enabled')
-          wsRetryCount.value = 0 // reset retry count on success
-        }
-
-        ws.value.onmessage = (event) => {
-          try {
-            const message = JSON.parse(event.data)
-
-            // Respond to server-level PINGs to keep connection alive
-            if (message?.type === 'PING') {
-              try { ws.value?.send(JSON.stringify({ type: 'PONG' })); } catch (e) {}
-              return
-            }
-
-            // Ignore PONG messages
-            if (message?.type === 'PONG') {
-              return
-            }
-
-            handleWebSocketMessage(message)
-          } catch (err) {
-            console.error('Error parsing WebSocket message:', err)
-          }
-        }
-
-        ws.value.onerror = (error) => {
-          console.error('❌ WebSocket connection error')
-          if (import.meta.env.DEV) console.error('WebSocket error details:', error)
-        }
-
-        ws.value.onclose = () => {
-          console.warn('Socket closed. Reconnecting in 1 second...')
-          // Attempt to reconnect after 1 second
-          setTimeout(connect, 1000)
-        }
-      } catch (err) {
-        console.error('Error connecting to WebSocket:', err)
-        // Retry after 1s on failure
-        setTimeout(connect, 1000)
-      }
-    }
-
-    // Start initial connection
-    connect()
+    // Connect to WebSocket
+    WebSocketService.connect()
   }
 
   /**
@@ -361,22 +297,11 @@ export const useEventsStore = defineStore('events', () => {
    * Disconnect WebSocket
    */
   function disconnectWebSocket() {
-    // Clear any pending retry timeout
-    if (wsRetryTimeout.value) {
-      clearTimeout(wsRetryTimeout.value)
-      wsRetryTimeout.value = null
-    }
-    
-    // Reset retry count
-    wsRetryCount.value = 0
-    
-    // Close WebSocket connection
-    if (ws.value) {
-      ws.value.close()
-      ws.value = null
-    }
-    
-    console.log('🔌 WebSocket manually disconnected')
+    // Remove message handler
+    WebSocketService.removeMessageHandler(handleWebSocketMessage)
+
+    // Disconnect WebSocket
+    WebSocketService.disconnect()
   }
 
   return {
