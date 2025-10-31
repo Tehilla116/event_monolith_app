@@ -174,6 +174,7 @@ const app: any = new Elysia()
 // Start server in a safe start function so we can handle EADDRINUSE and other errors
 async function startServer() {
   const port = Number(process.env.PORT) || 3000;
+  const hostname = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
 
   // Helper sleep
   const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
@@ -181,7 +182,7 @@ async function startServer() {
   const maxAttempts = 6;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      await app.listen({ hostname: "localhost", port });
+      await app.listen({ hostname, port });
 
       // Pass the app server instance to websocket service for publishing
       setServerInstance(app.server);
