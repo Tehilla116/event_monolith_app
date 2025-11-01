@@ -213,6 +213,17 @@ export async function updateEvent(
             role: true,
           },
         },
+        rsvps: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                role: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -435,6 +446,17 @@ export async function approveEvent(eventId: string) {
             id: true,
             email: true,
             role: true,
+          },
+        },
+        rsvps: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                role: true,
+              },
+            },
           },
         },
       },
