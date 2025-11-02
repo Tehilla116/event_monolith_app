@@ -164,10 +164,16 @@
                         messageDiv.classList.add('rsvp-message');
                     }
 
-                    messageDiv.innerHTML = `
-                        <strong>${data.type || 'MESSAGE'}</strong>
-                        <pre>${JSON.stringify(data.data, null, 2)}</pre>
-                    `;
+                    // Create elements safely to prevent XSS
+                    const typeElement = document.createElement('strong');
+                    typeElement.textContent = data.type || 'MESSAGE';
+                    
+                    const preElement = document.createElement('pre');
+                    preElement.textContent = JSON.stringify(data.data, null, 2);
+                    
+                    messageDiv.appendChild(typeElement);
+                    messageDiv.appendChild(document.createElement('br'));
+                    messageDiv.appendChild(preElement);
                     
                     messagesDiv.insertBefore(messageDiv, messagesDiv.firstChild);
                 } catch (error) {
