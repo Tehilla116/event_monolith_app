@@ -27,13 +27,15 @@
     "bcryptjs": "^2.4.3",
     "elysia": "^1.1.23",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^6.9.16"
+    "nodemailer": "^6.9.16",
+    "striptags": "^3.2.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.8.6",
     "@types/nodemailer": "^6.4.16",
+    "@types/striptags": "^3.1.1",
     "bun-types": "latest",
     "prisma": "^6.17.1",
     "typescript": "^5.6.3"

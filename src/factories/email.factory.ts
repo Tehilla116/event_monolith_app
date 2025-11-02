@@ -1,4 +1,5 @@
 import type { SendMailOptions } from "nodemailer";
+import striptags from "striptags";
 
 /**
  * Email Factory Pattern
@@ -380,10 +381,10 @@ export class EmailFactory {
 
   /**
    * Helper: Strip HTML tags for plain text version
+   * Uses striptags library for safe HTML sanitization
    */
   private static stripHtml(html: string): string {
-    return html
-      .replace(/<[^>]*>/g, '')
+    return striptags(html)
       .replace(/\s+/g, ' ')
       .trim();
   }
