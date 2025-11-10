@@ -32,6 +32,22 @@ const toastType = ref<'success' | 'error' | 'warning' | 'info'>('success')
 const showToast = ref(false)
 
 /**
+ * Filter events based on user role
+ * ATTENDEE: Only approved events
+ * ORGANIZER: All their events (approved + pending)
+ * ADMIN: All events (approved + pending)
+ */
+const displayedEvents = computed(() => {
+  // For ATTENDEES, only show approved events
+  if (authStore.userRole === 'ATTENDEE') {
+    return eventsStore.events.filter(event => event.approved)
+  }
+  
+  // For ORGANIZERS and ADMINS, show all events
+  return eventsStore.events
+})
+
+/**
  * Show toast notification
  */
 const showToastNotification = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
@@ -239,7 +255,7 @@ const handleReject = async (eventId: string) => {
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="eventsStore.events.length === 0" class="text-center py-12">
+    <div v-else-if="displayedEvents.length === 0" class="text-center py-12">
       <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
         <Plus class="w-8 h-8 text-gray-400" />
       </div>
@@ -262,7 +278,7 @@ const handleReject = async (eventId: string) => {
     <!-- Events Grid -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <EventCard
-        v-for="event in eventsStore.events"
+        v-for="event in displayedEvents"
         :key="event.id"
         :event="event"
         @edit="handleEventEdit"
