@@ -744,4 +744,5 @@ This project is licensed under the MIT License.
 - Database management with [Prisma](https://www.prisma.io/)
 
 Youtube link of how it works: https://youtu.be/PDJALmKuOeA
-
+Frontend link : https://event-monolith-app-frontend.onrender.com
+Backend link:  https://event-monolith-app-7kom.onrender.com
