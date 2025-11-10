@@ -743,7 +743,5 @@ This project is licensed under the MIT License.
 - UI powered by [Vue.js](https://vuejs.org/) and [Tailwind CSS](https://tailwindcss.com/)
 - Database management with [Prisma](https://www.prisma.io/)
 
----
-
-**Made with ❤️ using modern design patterns and best practices**
+Youtube link of how it works: https://youtu.be/PDJALmKuOeA
 
