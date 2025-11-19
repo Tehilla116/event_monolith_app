@@ -733,9 +733,7 @@ Open `websocket-test.html` in your browser to test real-time updates.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
 
-This project is licensed under the MIT License.
 
 ## 🙏 Acknowledgments
 
@@ -746,3 +744,9 @@ This project is licensed under the MIT License.
 Youtube link of how it works: https://youtu.be/PDJALmKuOeA
 Frontend link : https://event-monolith-app-frontend.onrender.com
 Backend link:  https://event-monolith-app-7kom.onrender.com
+
+## Students
+
+1. Tehilla Chiwama — `2410014`
+2. Bright Mwansa — `2410010`
+3. Mwenya Simpungwe — `2410013`
